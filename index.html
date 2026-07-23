@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<title>Touch Pass — Bill of Materials</title>
+<script>
+// View-only mode: open this page with ?view=1 in the URL to hide all editing
+// controls. The bare URL (no query string) always opens in full-edit mode.
+(function(){
+  var params = new URLSearchParams(location.search);
+  if(params.get("view")==="1"){ document.documentElement.classList.add("view-only"); }
+})();
+</script>
+<style>
+  :root{
+    color-scheme: light;
+    --ink:#1c1c1c;
+    --muted:#6b6b6b;
+    --line:#e4e4e4;
+    --paper:#fbfbfa;
+    --card:#ffffff;
+    --frm:#1f9e8a;
+    --hw:#d97a1f;
+    --cry:#6452c9;
+    --ext:#2563b0;
+    --gold:#b8860b;
+    --good:#1f9e6b;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
+
+  .container{max-width:1400px; margin:0 auto; padding:38px 32px 70px;}
+
+  h2{font-size:19px; font-weight:800; margin:46px 0 12px; padding-bottom:8px;}
+  .container > h2:first-child{margin-top:0;}
+  .subtitle{font-size:13px; color:var(--muted); margin:-6px 0 20px;}
+
+  p{line-height:1.6; font-size:14px;}
+
+  .btn{font-family:inherit; font-size:12.5px; font-weight:700; padding:8px 14px; border-radius:6px; border:1px solid var(--ink); background:#fff; color:var(--ink); cursor:pointer;}
+  .btn:hover{background:var(--ink); color:#fff;}
+  .btn.subtle{font-size:12px; padding:6px 12px; border-color:var(--line); color:var(--muted); font-weight:600;}
+  .btn.subtle:hover{background:var(--line); color:var(--ink); border-color:var(--line);}
+  .btn.danger-ish:hover{background:#b5556f; border-color:#b5556f;}
+
+  .toolbar{display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-bottom:6px;}
+  .save-status{font-size:11px; color:var(--muted); margin-right:auto;}
+
+  /* Summary cards */
+  .summary-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:12px;}
+  .summary-card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px;}
+  .summary-card .tier-label{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:8px;}
+  .summary-card .tier-total{font-size:21px; font-weight:800; line-height:1.1;}
+  .summary-card .tier-total-unit{font-size:11px; font-weight:700; color:var(--muted); text-transform:none;}
+  .summary-card .tier-per{font-size:12px; color:var(--muted); margin-top:4px;}
+  .summary-note{font-size:11.5px; color:var(--muted); margin:10px 2px 0;}
+
+  /* Legend */
+  .legend{display:flex; gap:16px; flex-wrap:wrap; margin:2px 0 14px; font-size:11.5px; color:var(--muted);}
+  .legend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+
+  /* Table */
+  .table-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:8px; background:#fff;}
+  table.bom{border-collapse:separate; border-spacing:0; font-size:12px; white-space:nowrap;}
+  table.bom th, table.bom td{padding:7px 9px; border-bottom:1px solid var(--line); border-right:1px solid var(--line); vertical-align:middle;}
+  table.bom th.tier-end, table.bom td.tier-end{border-right:1.5px solid #b7b7b3;}
+  table.bom thead th{background:#f6f6f5; text-align:left; font-size:10.3px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:800; border-bottom:2px solid var(--ink);}
+  table.bom thead tr.tier-row th{text-align:center;}
+  table.bom thead tr.subhead th{font-size:10px; text-align:right; background:#fafafa;}
+  table.bom thead tr.subhead th.left{text-align:left;}
+  table.bom tbody td{color:var(--ink);}
+  table.bom tbody tr:hover td{background:#fafafa;}
+  table.bom tbody tr.deselected td{color:#b7b7b3;}
+  table.bom tbody tr.deselected .badge{opacity:.5;}
+  table.bom tbody tr.deselected td.name-cell{color:#9a9a95; text-decoration:line-through; text-decoration-color:#cfcfca;}
+  td.num{text-align:right; font-variant-numeric:tabular-nums;}
+  td.name-cell{white-space:normal; min-width:230px; max-width:280px; font-weight:700;}
+  td.notes-cell{white-space:normal; min-width:200px; max-width:260px; color:var(--muted); font-size:11.3px;}
+  .desc-sub{font-weight:400; color:var(--muted); font-size:11.3px;}
+  td.mnfctr-cell{color:var(--muted);}
+  td.center{text-align:center;}
+
+  /* Sticky columns */
+  .stick{position:sticky; background:#fff; z-index:2;}
+  thead .stick{background:#f6f6f5; z-index:4;}
+  .stick-0{left:0; width:34px;}
+  .stick-1{left:34px; width:30px;}
+  .stick-2{left:64px; box-shadow:2px 0 4px -2px rgba(0,0,0,.15);}
+  tbody tr.deselected .stick{background:#fcfcfb;}
+  tbody tr:hover .stick{background:#fafafa;}
+
+  .badge{display:inline-block; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; padding:3px 8px; border-radius:999px; color:#fff;}
+
+  tr.totals-row td{border-top:2px solid var(--ink); font-weight:800; background:#fafaf9;}
+  tr.totals-row td.label-cell{text-align:right; color:var(--muted); font-weight:700; text-transform:uppercase; font-size:10.3px; letter-spacing:.03em;}
+
+  input[type=checkbox]{width:15px; height:15px; cursor:pointer; accent-color:var(--ink);}
+
+  .icon-btn{border:none; background:none; cursor:pointer; font-size:13px; padding:2px 5px; border-radius:4px; color:var(--muted); line-height:1;}
+  .icon-btn:hover{background:var(--line); color:var(--ink);}
+  td.actions{white-space:nowrap; text-align:right;}
+
+  .add-row{margin-top:12px; display:none;}
+  td.actions, th.actions-h{display:none;}
+  #exportBtn{display:none;}
+  #resetBtn{display:none;}
+
+  footer{margin-top:50px; padding-top:16px; border-top:1px solid var(--line); font-size:11.5px; color:var(--muted); font-style:italic;}
+
+  /* Modal */
+  .modal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:50; padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:#fff; border-radius:10px; width:100%; max-width:720px; max-height:88vh; overflow-y:auto; padding:24px 26px; box-shadow:0 12px 40px rgba(0,0,0,.25);}
+  .modal h3{margin:0 0 16px; font-size:16px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin-bottom:5px;}
+  .field input[type=text], .field input[type=number], .field select, .field textarea{width:100%; font-family:inherit; font-size:13px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; color:var(--ink);}
+  .field textarea{resize:vertical; min-height:56px;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .field-row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:18px;}
+  .hint{font-size:11px; color:var(--muted); margin-top:-2px; margin-bottom:14px;}
+
+  table.tier-edit{width:100%; border-collapse:collapse; font-size:12px; margin-top:4px;}
+  table.tier-edit th{text-align:right; font-size:10px; text-transform:uppercase; color:var(--muted); padding:4px 5px; font-weight:700;}
+  table.tier-edit th.left{text-align:left;}
+  table.tier-edit td{padding:3px 5px;}
+  table.tier-edit td.tlabel{font-weight:700; white-space:nowrap;}
+  table.tier-edit input{width:100%; font-family:inherit; font-size:12px; padding:5px 6px; border:1px solid var(--line); border-radius:5px; text-align:right;}
+  table.tier-edit .auto-btn{font-size:10px; padding:4px 6px; border-radius:5px; border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--muted);}
+  table.tier-edit .auto-btn:hover{background:var(--line); color:var(--ink);}
+
+  /* View-only mode: hide editing affordances entirely (checkboxes stay live) */
+  .view-only .toolbar{display:none;}
+  .view-only .add-row{display:none;}
+  .view-only .icon-btn{display:none;}
+  .view-only td.actions, .view-only th.actions-h{visibility:hidden;}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="toolbar">
+    <span class="save-status" id="savedStamp">Saved to this browser · —</span>
+    <button class="btn subtle" id="resetBtn" onclick="resetDefaults()">Reset to Original</button>
+    <button class="btn" id="exportBtn" onclick="exportHtml()">Export HTML</button>
+  </div>
+
+  <h2 style="margin-top:0;">Bill of Materials</h2>
+  <div class="legend" id="legend"></div>
+
+  <div class="table-wrap">
+    <table class="bom" id="bomTable">
+      <thead id="bomThead"></thead>
+      <tbody id="bomTbody"></tbody>
+      <tbody id="bomTotals"></tbody>
+    </table>
+  </div>
+  <div class="add-row"><button class="btn subtle" onclick="openModal()">+ Add Part</button></div>
+
+  <div class="summary-grid" id="summaryGrid" style="margin-top:46px;"></div>
+  <div class="summary-note" id="selectedCount"></div>
+
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal">
+    <h3 id="modalTitle">Edit Part</h3>
+    <form id="modalForm" onsubmit="saveModal(event)">
+      <div class="field-row">
+        <div class="field">
+          <label for="f-letter">Row ID</label>
+          <input type="text" id="f-letter" maxlength="3" required>
+        </div>
+        <div class="field">
+          <label for="f-partnum">Part Number</label>
+          <input type="text" id="f-partnum">
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-name">Description / Name</label>
+        <input type="text" id="f-name" required>
+      </div>
+      <div class="field-row3">
+        <div class="field">
+          <label for="f-category">Category</label>
+          <select id="f-category">
+            <option value="frm">Frame</option>
+            <option value="hw">Hardware</option>
+            <option value="cry">Carry</option>
+            <option value="ext">Extras</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-mnfctr">Manufacturer</label>
+          <input type="text" id="f-mnfctr">
+        </div>
+        <div class="field">
+          <label for="f-selected">Selected by default</label>
+          <select id="f-selected">
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-notes">Notes</label>
+        <textarea id="f-notes"></textarea>
+      </div>
+      <div class="field">
+        <label>Cost by Production Scale</label>
+        <div class="hint">Edit Cost and Qty, then use ↻ to fill in Total and Per-Board as a starting point — both stay manually editable.</div>
+        <table class="tier-edit" id="tierEditTable"></table>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn subtle" onclick="closeModal()">Cancel</button>
+        <button type="button" class="btn danger-ish" id="modalDeleteBtn" onclick="deleteFromModal()" style="border-color:#b5556f;">Delete</button>
+        <button type="submit" class="btn">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const TIERS=[38,100,200,500,1000];
+const CATEGORY_META=[
+  {key:"frm", name:"Frame", color:"--frm"},
+  {key:"hw",  name:"Hardware", color:"--hw"},
+  {key:"cry", name:"Carry", color:"--cry"},
+  {key:"ext", name:"Extras", color:"--ext"}
+];
+const CAT_BY_KEY={}; CATEGORY_META.forEach(c=>CAT_BY_KEY[c.key]=c);
+
+function tierBlock(cost,qty,total,perBoard){ return {cost:cost, qty:qty, total:total, perBoard:perBoard}; }
+
+const DEFAULT_DATA = /*DATA_START*/{"parts":[
+  {"id":"p_a","letter":"A","partNumber":"BPV5519W","name":"Expanded PVC Plastic Sheet White 3/4 in","category":"frm","mnfctr":"Signworld","links":["https://display-wholesale.com/collections/pvc-sheet/products/expanded-pvc-sheet-19-mm-white"],"notes":"High freight costs, waiting on 3 more (local) quotes","selected":true,"tiers":{"38":{"cost":140.70,"qty":10,"total":1407.00,"perBoard":37.03},"100":{"cost":140.70,"qty":30,"total":4221.00,"perBoard":37.03},"200":{"cost":140.70,"qty":60,"total":8442.00,"perBoard":37.03},"500":{"cost":140.70,"qty":140,"total":19698.00,"perBoard":37.03},"1000":{"cost":140.70,"qty":270,"total":37989.00,"perBoard":37.03}}},
+  {"id":"p_b","letter":"B","partNumber":"BPV5513W","name":"Expanded PVC Plastic Sheet White 1/2 in","category":"frm","mnfctr":"Signworld","links":["https://display-wholesale.com/products/expanded-pvc-sheet-13-mm-white"],"notes":"Likely to affect sturdiness. Less material to screw into","selected":true,"tiers":{"38":{"cost":102.70,"qty":10,"total":1027.00,"perBoard":27.03},"100":{"cost":102.70,"qty":30,"total":3081.00,"perBoard":27.03},"200":{"cost":102.70,"qty":60,"total":6162.00,"perBoard":27.03},"500":{"cost":102.70,"qty":140,"total":14378.00,"perBoard":27.03},"1000":{"cost":102.70,"qty":270,"total":27729.00,"perBoard":27.03}}},
+  {"id":"p_c","letter":"C","partNumber":"717015885019","name":"4 Stainless Steel Piano Hinge 12 inch, Silver or Black","category":"hw","mnfctr":"YHNTGB","links":["https://www.amazon.com/gp/product/B0C7G9CX82"],"notes":"Screws included","selected":true,"tiers":{"38":{"cost":11.99,"qty":19,"total":227.81,"perBoard":6.00},"100":{"cost":11.99,"qty":57,"total":683.43,"perBoard":6.00},"200":{"cost":11.99,"qty":114,"total":1366.86,"perBoard":6.00},"500":{"cost":11.99,"qty":266,"total":3189.34,"perBoard":6.00},"1000":{"cost":11.99,"qty":513,"total":6150.87,"perBoard":6.00}}},
+  {"id":"p_d","letter":"D","partNumber":"B0D9HF56ZP","name":"6 Stainless Steel Piano Hinge 14 inch, Lacquered Black","category":"hw","mnfctr":"Falcontoy","links":["https://www.amazon.com/dp/B0D9HF56ZP"],"notes":"Screws included, 16.00 for 6","selected":true,"tiers":{"38":{"cost":16.00,"qty":13.0,"total":208.00,"perBoard":5.47},"100":{"cost":16.00,"qty":38,"total":608.00,"perBoard":5.33},"200":{"cost":16.00,"qty":76,"total":1216.00,"perBoard":5.33},"500":{"cost":16.00,"qty":178,"total":2848.00,"perBoard":5.35},"1000":{"cost":16.00,"qty":342,"total":5472.00,"perBoard":5.33}}},
+  {"id":"p_e","letter":"E","partNumber":"ST1334","name":"4 Adjustable Torque Hinges (0.3-2NM), Zinc Alloy, Black","category":"hw","mnfctr":"Hevstil","links":["https://www.amazon.com/dp/B0BRNH9C8Z"],"notes":"Screws included, Tested Torque","selected":true,"tiers":{"38":{"cost":15.99,"qty":38,"total":607.62,"perBoard":15.99},"100":{"cost":15.99,"qty":114,"total":1822.86,"perBoard":15.99},"200":{"cost":15.99,"qty":228,"total":3645.72,"perBoard":15.99},"500":{"cost":15.99,"qty":532,"total":8506.68,"perBoard":15.99},"1000":{"cost":15.99,"qty":1026,"total":16405.74,"perBoard":15.99}}},
+  {"id":"p_f","letter":"F","partNumber":"CAH_62N","name":"12 Double Roller Catch Latches, 40 mm, Solid Brass, Silver","category":"hw","mnfctr":"HOJLKLD","links":["https://www.amazon.com/dp/B0G4PBMTQR"],"notes":"Screws included, testing today","selected":true,"tiers":{"38":{"cost":13.99,"qty":4.0,"total":55.96,"perBoard":1.47},"100":{"cost":13.99,"qty":10.0,"total":139.90,"perBoard":1.23},"200":{"cost":13.99,"qty":19.0,"total":265.81,"perBoard":1.17},"500":{"cost":13.99,"qty":45.0,"total":629.55,"perBoard":1.18},"1000":{"cost":13.99,"qty":86.0,"total":1203.14,"perBoard":1.17}}},
+  {"id":"p_g","letter":"G","partNumber":"","name":"Elastic Band, with logo","category":"cry","mnfctr":"Many","links":["https://www.everythingbranded.com/product/yoga-resistance-bands","https://www.qualitylogoproducts.com/fitness/stretch-exercise-band","https://www.4allpromos.com/product/exercise-band-2?default"],"notes":"","selected":true,"tiers":{"38":{"cost":3.00,"qty":38,"total":114.00,"perBoard":3.00},"100":{"cost":3.00,"qty":114,"total":342.00,"perBoard":3.00},"200":{"cost":3.00,"qty":228,"total":684.00,"perBoard":3.00},"500":{"cost":3.00,"qty":532,"total":1596.00,"perBoard":3.00},"1000":{"cost":3.00,"qty":1026,"total":3078.00,"perBoard":3.00}}},
+  {"id":"p_h","letter":"H","partNumber":"B0D8TJ8BXB","name":"U-Channel Rubber Edge Banding, 20 ft, White or Black","category":"ext","mnfctr":"Yanruipro","links":["https://www.amazon.com/gp/product/B0D8TJ8BXB"],"notes":"Tested with heat gun, figures for two edges only, 7.5 games per roll","selected":true,"tiers":{"38":{"cost":32.99,"qty":5,"total":164.95,"perBoard":4.34},"100":{"cost":32.99,"qty":16,"total":527.84,"perBoard":4.63},"200":{"cost":32.99,"qty":31,"total":1022.69,"perBoard":4.49},"500":{"cost":32.99,"qty":71,"total":2342.29,"perBoard":4.40},"1000":{"cost":32.99,"qty":137,"total":4519.63,"perBoard":4.41}}}
+]}/*DATA_END*/;
+
+const DATA_KEY="touchPassBOMData_v1";
+const SELECTION_KEY="touchPassBOMSelection_v1";
+
+function isViewOnly(){ return document.documentElement.classList.contains("view-only"); }
+
+function uid(){ return "p_"+Math.random().toString(36).slice(2,9); }
+
+function loadData(){
+  let data;
+  if(isViewOnly()){
+    data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }else{
+    try{
+      const raw=localStorage.getItem(DATA_KEY);
+      data = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }catch(e){
+      data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }
+  }
+  // Selection is tracked per-browser independent of edit mode, so any
+  // visitor (including view-only) can explore without needing edit rights.
+  try{
+    const rawSel=localStorage.getItem(SELECTION_KEY);
+    if(rawSel){
+      const sel=JSON.parse(rawSel);
+      data.parts.forEach(p=>{ if(Object.prototype.hasOwnProperty.call(sel,p.id)) p.selected=!!sel[p.id]; });
+    }
+  }catch(e){}
+  return data;
+}
+
+function saveData(){
+  if(isViewOnly()) return;
+  try{ localStorage.setItem(DATA_KEY, JSON.stringify(bomData)); }catch(e){}
+  updateSavedStamp();
+}
+
+function saveSelection(){
+  try{
+    const sel={};
+    bomData.parts.forEach(p=>{ sel[p.id]=!!p.selected; });
+    localStorage.setItem(SELECTION_KEY, JSON.stringify(sel));
+  }catch(e){}
+}
+
+let bomData=loadData();
+let modalState={partId:null};
+
+function fmtMoney(n){
+  n = Math.round((n+Number.EPSILON)*100)/100;
+  return "$"+n.toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function renderLegend(){
+  const el=document.getElementById("legend");
+  el.innerHTML=CATEGORY_META.map(c=>
+    '<span><span class="sw" style="background:var('+c.color+')"></span>'+c.name+'</span>'
+  ).join("");
+}
+
+function renderSummary(){
+  const grid=document.getElementById("summaryGrid");
+  grid.innerHTML=TIERS.map(t=>{
+    let total=0, perBoard=0;
+    bomData.parts.forEach(p=>{
+      if(!p.selected) return;
+      const tb=p.tiers[t];
+      if(!tb) return;
+      total+=(Number(tb.total)||0);
+      perBoard+=(Number(tb.perBoard)||0);
+    });
+    return '<div class="summary-card">'+
+      '<div class="tier-label">'+t+' Boards</div>'+
+      '<div class="tier-total">'+fmtMoney(perBoard)+' <span class="tier-total-unit">per board</span></div>'+
+      '<div class="tier-per">'+fmtMoney(total)+' total</div>'+
+      '</div>';
+  }).join("");
+  const n=bomData.parts.filter(p=>p.selected).length;
+  document.getElementById("selectedCount").textContent=n+" of "+bomData.parts.length+" parts selected.";
+}
+
+function renderTotalsRow(){
+  const tb=document.getElementById("bomTotals");
+  let cells='<td class="stick stick-0"></td><td class="stick stick-1"></td>'+
+    '<td class="stick stick-2 label-cell" colspan="1">Totals</td>'+
+    '<td colspan="3"></td>';
+  TIERS.forEach(t=>{
+    let total=0, perBoard=0;
+    bomData.parts.forEach(p=>{
+      if(!p.selected) return;
+      const tbk=p.tiers[t];
+      if(!tbk) return;
+      total+=(Number(tbk.total)||0);
+      perBoard+=(Number(tbk.perBoard)||0);
+    });
+    cells+='<td class="num"></td><td class="num"></td><td class="num">'+fmtMoney(total)+'</td><td class="num tier-end">'+fmtMoney(perBoard)+'</td>';
+  });
+  cells+='<td class="actions"></td>';
+  tb.innerHTML='<tr class="totals-row">'+cells+'</tr>';
+}
+
+function renderThead(){
+  const thead=document.getElementById("bomThead");
+  let row1='<tr class="tier-row">'+
+    '<th class="stick stick-0" rowspan="2"></th>'+
+    '<th class="stick stick-1" rowspan="2">ID</th>'+
+    '<th class="stick stick-2" rowspan="2">Description / Name</th>'+
+    '<th rowspan="2">Category</th>'+
+    '<th rowspan="2">Mnfctr</th>'+
+    '<th rowspan="2">Notes</th>';
+  TIERS.forEach(t=>{ row1+='<th colspan="4" class="tier-end">For '+t+' Boards</th>'; });
+  row1+='<th rowspan="2" class="actions-h">Actions</th></tr>';
+
+  let row2='<tr class="subhead">';
+  TIERS.forEach(()=>{
+    row2+='<th>Cost</th><th>Qty</th><th>Total</th><th class="tier-end">Per Board</th>';
+  });
+  row2+='</tr>';
+  thead.innerHTML=row1+row2;
+}
+
+function renderTbody(){
+  const tb=document.getElementById("bomTbody");
+  tb.innerHTML=bomData.parts.map(p=>{
+    const cat=CAT_BY_KEY[p.category]||CATEGORY_META[0];
+    let tierCells="";
+    TIERS.forEach(t=>{
+      const d=p.tiers[t]||{cost:0,qty:0,total:0,perBoard:0};
+      tierCells+='<td class="num">'+fmtMoney(d.cost)+'</td>'+
+        '<td class="num">'+(d.qty)+'</td>'+
+        '<td class="num">'+fmtMoney(d.total)+'</td>'+
+        '<td class="num tier-end">'+fmtMoney(d.perBoard)+'</td>';
+    });
+    return '<tr id="row-'+p.id+'" class="'+(p.selected?"":"deselected")+'">'+
+      '<td class="stick stick-0 center"><input type="checkbox" '+(p.selected?"checked":"")+' onchange="toggleSelected(\''+p.id+'\', this.checked)"></td>'+
+      '<td class="stick stick-1 center">'+p.letter+'</td>'+
+      '<td class="stick stick-2 name-cell">'+p.name+(p.partNumber?' <span class="desc-sub">('+p.partNumber+')</span>':'')+'</td>'+
+      '<td><span class="badge" style="background:var('+cat.color+')">'+cat.name+'</span></td>'+
+      '<td class="mnfctr-cell">'+(p.mnfctr||"")+'</td>'+
+      '<td class="notes-cell">'+(p.notes||"")+'</td>'+
+      tierCells+
+      '<td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal(\''+p.id+'\')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete(\''+p.id+'\')">🗑</button></td>'+
+      '</tr>';
+  }).join("");
+}
+
+function renderAll(){
+  renderLegend();
+  renderThead();
+  renderTbody();
+  renderTotalsRow();
+  renderSummary();
+  updateSavedStamp();
+}
+
+function toggleSelected(id, checked){
+  const p=bomData.parts.find(x=>x.id===id);
+  if(!p) return;
+  p.selected=checked;
+  const row=document.getElementById("row-"+id);
+  if(row) row.classList.toggle("deselected", !checked);
+  renderTotalsRow();
+  renderSummary();
+  saveSelection();
+  if(!isViewOnly()) saveData();
+}
+
+/* ---------- Modal ---------- */
+
+function buildTierEditTable(tiersObj){
+  let html='<tr><th class="left">Boards</th><th>Cost</th><th>Qty</th><th>Total</th><th>Per Board</th><th></th></tr>';
+  TIERS.forEach(t=>{
+    const d=(tiersObj && tiersObj[t]) || {cost:0,qty:0,total:0,perBoard:0};
+    html+='<tr>'+
+      '<td class="tlabel">'+t+'</td>'+
+      '<td><input type="number" step="0.01" id="ft-'+t+'-cost" value="'+d.cost+'"></td>'+
+      '<td><input type="number" step="0.01" id="ft-'+t+'-qty" value="'+d.qty+'"></td>'+
+      '<td><input type="number" step="0.01" id="ft-'+t+'-total" value="'+d.total+'"></td>'+
+      '<td><input type="number" step="0.01" id="ft-'+t+'-perboard" value="'+d.perBoard+'"></td>'+
+      '<td><button type="button" class="auto-btn" title="Fill Total & Per Board from Cost × Qty" onclick="autoFillTier('+t+')">↻</button></td>'+
+      '</tr>';
+  });
+  return html;
+}
+
+function autoFillTier(t){
+  const cost=parseFloat(document.getElementById("ft-"+t+"-cost").value)||0;
+  const qty=parseFloat(document.getElementById("ft-"+t+"-qty").value)||0;
+  const total=cost*qty;
+  document.getElementById("ft-"+t+"-total").value=total.toFixed(2);
+  document.getElementById("ft-"+t+"-perboard").value=(total/t).toFixed(2);
+}
+
+function openModal(partId){
+  if(isViewOnly()) return;
+  modalState.partId=partId||null;
+  const p=partId ? bomData.parts.find(x=>x.id===partId) : null;
+  document.getElementById("modalTitle").textContent = p ? "Edit Part" : "Add Part";
+  document.getElementById("modalDeleteBtn").style.display = p ? "" : "none";
+  document.getElementById("f-letter").value = p ? p.letter : nextLetter();
+  document.getElementById("f-partnum").value = p ? p.partNumber : "";
+  document.getElementById("f-name").value = p ? p.name : "";
+  document.getElementById("f-category").value = p ? p.category : "frm";
+  document.getElementById("f-mnfctr").value = p ? p.mnfctr : "";
+  document.getElementById("f-selected").value = p ? (p.selected?"1":"0") : "1";
+  document.getElementById("f-notes").value = p ? (p.notes||"") : "";
+  document.getElementById("tierEditTable").innerHTML = buildTierEditTable(p ? p.tiers : null);
+  document.getElementById("modalOverlay").classList.add("open");
+}
+
+function nextLetter(){
+  const used=new Set(bomData.parts.map(p=>p.letter));
+  for(let i=0;i<26;i++){
+    const L=String.fromCharCode(65+i);
+    if(!used.has(L)) return L;
+  }
+  return "X";
+}
+
+function closeModal(){
+  document.getElementById("modalOverlay").classList.remove("open");
+  modalState.partId=null;
+}
+
+function deleteFromModal(){
+  if(!modalState.partId) return;
+  quickDelete(modalState.partId);
+  closeModal();
+}
+
+function quickDelete(id){
+  if(isViewOnly()) return;
+  if(!confirm("Delete this part from the BOM?")) return;
+  bomData.parts=bomData.parts.filter(p=>p.id!==id);
+  saveData();
+  renderAll();
+}
+
+function saveModal(e){
+  e.preventDefault();
+  const tiers={};
+  TIERS.forEach(t=>{
+    tiers[t]={
+      cost: parseFloat(document.getElementById("ft-"+t+"-cost").value)||0,
+      qty: parseFloat(document.getElementById("ft-"+t+"-qty").value)||0,
+      total: parseFloat(document.getElementById("ft-"+t+"-total").value)||0,
+      perBoard: parseFloat(document.getElementById("ft-"+t+"-perboard").value)||0
+    };
+  });
+  const fields={
+    letter: document.getElementById("f-letter").value.trim()||"?",
+    partNumber: document.getElementById("f-partnum").value.trim(),
+    name: document.getElementById("f-name").value.trim(),
+    category: document.getElementById("f-category").value,
+    mnfctr: document.getElementById("f-mnfctr").value.trim(),
+    selected: document.getElementById("f-selected").value==="1",
+    notes: document.getElementById("f-notes").value.trim(),
+    tiers: tiers
+  };
+  if(modalState.partId){
+    const p=bomData.parts.find(x=>x.id===modalState.partId);
+    if(p) Object.assign(p, fields);
+  }else{
+    fields.id=uid();
+    bomData.parts.push(fields);
+  }
+  closeModal();
+  saveData();
+  saveSelection();
+  renderAll();
+}
+
+/* ---------- Export / Reset ---------- */
+
+function exportHtml(){
+  if(isViewOnly()) return;
+  closeModal();
+  let html=document.documentElement.outerHTML;
+  const newData=JSON.stringify(bomData);
+  html=html.replace(/\/\*DATA_START\*\/[\s\S]*?\/\*DATA_END\*\//, "/*DATA_START*/"+newData+"/*DATA_END*/");
+  const blob=new Blob(["<!DOCTYPE html>\n"+html], {type:"text/html"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="Touch Pass - Bill of Materials.html";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function resetDefaults(){
+  if(isViewOnly()) return;
+  if(!confirm("Reset to the original BOM? This will discard all edits saved in this browser (selections you've made will be kept).")) return;
+  bomData=JSON.parse(JSON.stringify(DEFAULT_DATA));
+  // Re-apply this browser's saved selections on top of the restored defaults.
+  try{
+    const rawSel=localStorage.getItem(SELECTION_KEY);
+    if(rawSel){
+      const sel=JSON.parse(rawSel);
+      bomData.parts.forEach(p=>{ if(Object.prototype.hasOwnProperty.call(sel,p.id)) p.selected=!!sel[p.id]; });
+    }
+  }catch(e){}
+  saveData();
+  renderAll();
+}
+
+function updateSavedStamp(){
+  const el=document.getElementById("savedStamp");
+  if(!el) return;
+  if(isViewOnly()){ el.textContent="View-only link · showing latest published data"; return; }
+  el.textContent="Saved to this browser · "+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+}
+
+document.addEventListener("keydown", function(e){
+  if(e.key==="Escape"){ closeModal(); }
+});
+
+document.addEventListener("DOMContentLoaded", function(){
+  renderAll();
+});
+</script>
+
+</body></html>
