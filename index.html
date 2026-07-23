@@ -22,6 +22,7 @@
     --hw:#d97a1f;
     --cry:#6452c9;
     --ext:#2563b0;
+    --forms:#b5556f;
     --gold:#b8860b;
     --good:#1f9e6b;
   }
@@ -83,12 +84,13 @@
   .stick{position:sticky; background:#fff; z-index:2;}
   thead .stick{background:#f6f6f5; z-index:4;}
   .stick-0{left:0; width:34px;}
-  .stick-1{left:34px; width:30px;}
-  .stick-2{left:64px; box-shadow:2px 0 4px -2px rgba(0,0,0,.15);}
+  .stick-1{left:34px; width:40px;}
+  .stick-2{left:74px; box-shadow:2px 0 4px -2px rgba(0,0,0,.15);}
   tbody tr.deselected .stick{background:#fcfcfb;}
   tbody tr:hover .stick{background:#fafafa;}
 
   .badge{display:inline-block; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; padding:3px 8px; border-radius:999px; color:#fff;}
+  .badge.id-badge{padding:0; width:22px; height:22px; line-height:22px; text-align:center; border-radius:50%; font-size:11px;}
 
   tr.totals-row td{border-top:2px solid var(--ink); font-weight:800; background:#fafaf9;}
   tr.totals-row td.label-cell{text-align:right; color:var(--muted); font-weight:700; text-transform:uppercase; font-size:10.3px; letter-spacing:.03em;}
@@ -99,10 +101,7 @@
   .icon-btn:hover{background:var(--line); color:var(--ink);}
   td.actions{white-space:nowrap; text-align:right;}
 
-  .add-row{margin-top:12px; display:none;}
-  td.actions, th.actions-h{display:none;}
-  #exportBtn{display:none;}
-  #resetBtn{display:none;}
+  .add-row{margin-top:12px;}
 
   footer{margin-top:50px; padding-top:16px; border-top:1px solid var(--line); font-size:11.5px; color:var(--muted); font-style:italic;}
 
@@ -128,6 +127,7 @@
   table.tier-edit input{width:100%; font-family:inherit; font-size:12px; padding:5px 6px; border:1px solid var(--line); border-radius:5px; text-align:right;}
   table.tier-edit .auto-btn{font-size:10px; padding:4px 6px; border-radius:5px; border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--muted);}
   table.tier-edit .auto-btn:hover{background:var(--line); color:var(--ink);}
+  table.tier-edit td.perboard-display{text-align:right; font-weight:700; color:var(--muted); padding-right:8px;}
 
   /* View-only mode: hide editing affordances entirely (checkboxes stay live) */
   .view-only .toolbar{display:none;}
@@ -141,25 +141,25 @@
 <div class="container">
 
   <div class="toolbar">
-    <span class="save-status" id="savedStamp">Saved to this browser · —</span>
+    <span class="save-status" id="savedStamp">Saved to this browser · 04:32 PM</span>
     <button class="btn subtle" id="resetBtn" onclick="resetDefaults()">Reset to Original</button>
     <button class="btn" id="exportBtn" onclick="exportHtml()">Export HTML</button>
   </div>
 
   <h2 style="margin-top:0;">Bill of Materials</h2>
-  <div class="legend" id="legend"></div>
+  <div class="legend" id="legend"><span><span class="sw" style="background:var(--frm)"></span>Frame</span><span><span class="sw" style="background:var(--hw)"></span>Hardware</span><span><span class="sw" style="background:var(--cry)"></span>Carry</span><span><span class="sw" style="background:var(--ext)"></span>Extras</span><span><span class="sw" style="background:var(--forms)"></span>Forms</span></div>
 
   <div class="table-wrap">
     <table class="bom" id="bomTable">
-      <thead id="bomThead"></thead>
-      <tbody id="bomTbody"></tbody>
-      <tbody id="bomTotals"></tbody>
+      <thead id="bomThead"><tr class="tier-row"><th class="stick stick-0" rowspan="2"></th><th class="stick stick-1" rowspan="2">ID</th><th class="stick stick-2" rowspan="2">Description / Name</th><th rowspan="2">Mnfctr</th><th colspan="4" class="tier-end">For 10 Boards</th><th colspan="4" class="tier-end">For 38 Boards</th><th colspan="4" class="tier-end">For 100 Boards</th><th rowspan="2">Notes</th><th rowspan="2" class="actions-h">Actions</th></tr><tr class="subhead"><th>Cost</th><th>Qty</th><th>Total</th><th class="tier-end">Per Board</th><th>Cost</th><th>Qty</th><th>Total</th><th class="tier-end">Per Board</th><th>Cost</th><th>Qty</th><th>Total</th><th class="tier-end">Per Board</th></tr></thead>
+      <tbody id="bomTbody"><tr id="row-p_a" class="deselected"><td class="stick stick-0 center"><input type="checkbox" onchange="toggleSelected('p_a', this.checked)"></td><td class="stick stick-1 center"><span class="badge id-badge" style="background:var(--frm)" title="Frame">A</span></td><td class="stick stick-2 name-cell">Expanded PVC Plastic Sheet White 3/4 in <span class="desc-sub">(BPV5519W)</span></td><td class="mnfctr-cell">Signworld</td><td class="num">$140.70</td><td class="num">3</td><td class="num">$422.10</td><td class="num tier-end">$42.21</td><td class="num">$140.70</td><td class="num">10</td><td class="num">$1,407.00</td><td class="num tier-end">$37.03</td><td class="num">$140.70</td><td class="num">30</td><td class="num">$4,221.00</td><td class="num tier-end">$37.03</td><td class="notes-cell">High freight costs, waiting on 3 more (local) quotes</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_a')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_a')">🗑</button></td></tr><tr id="row-p_b" class="deselected"><td class="stick stick-0 center"><input type="checkbox" onchange="toggleSelected('p_b', this.checked)"></td><td class="stick stick-1 center"><span class="badge id-badge" style="background:var(--frm)" title="Frame">B</span></td><td class="stick stick-2 name-cell">Expanded PVC Plastic Sheet White 1/2 in <span class="desc-sub">(BPV5513W)</span></td><td class="mnfctr-cell">Signworld</td><td class="num">$102.70</td><td class="num">3</td><td class="num">$308.10</td><td class="num tier-end">$30.81</td><td class="num">$102.70</td><td class="num">10</td><td class="num">$1,027.00</td><td class="num tier-end">$27.03</td><td class="num">$102.70</td><td class="num">30</td><td class="num">$3,081.00</td><td class="num tier-end">$27.03</td><td class="notes-cell">Likely to affect sturdiness. Less material to screw into</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_b')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_b')">🗑</button></td></tr><tr id="row-p_8va1ojv" class=""><td class="stick stick-0 center"><input type="checkbox" checked="" onchange="toggleSelected('p_8va1ojv', this.checked)"></td><td class="stick stick-1 center"><span class="badge id-badge" style="background:var(--frm)" title="Frame">C</span></td><td class="stick stick-2 name-cell">Expanded PVC Plastic Sheet White 3/4 in</td><td class="mnfctr-cell">E&amp;T Plastics</td><td class="num">$225.00</td><td class="num">3</td><td class="num">$675.00</td><td class="num tier-end">$67.50</td><td class="num">$0.00</td><td class="num">0</td><td class="num">$0.00</td><td class="num tier-end">$0.00</td><td class="num">$0.00</td><td class="num">0</td><td class="num">$0.00</td><td class="num tier-end">$0.00</td><td class="notes-cell">Pick-up in Teterboro, NJ, or $75 delivery fee to South NJ</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_8va1ojv')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_8va1ojv')">🗑</button></td></tr><tr id="row-p_c" class="deselected"><td class="stick stick-0 center"><input type="checkbox" onchange="toggleSelected('p_c', this.checked)"></td><td class="stick stick-1 center"><span class="badge id-badge" style="background:var(--hw)" title="Hardware">D</span></td><td class="stick stick-2 name-cell">4 Stainless Steel Piano Hinge 12 inch, Silver or Black <span class="desc-sub">(717015885019)</span></td><td class="mnfctr-cell">YHNTGB</td><td class="num">$11.99</td><td class="num">5</td><td class="num">$59.95</td><td class="num tier-end">$6.00</td><td class="num">$11.99</td><td class="num">19</td><td class="num">$227.81</td><td class="num tier-end">$6.00</td><td class="num">$11.99</td><td class="num">57</td><td class="num">$683.43</td><td class="num tier-end">$6.00</td><td class="notes-cell">Screws included</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_c')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_c')">🗑</button></td></tr><tr id="row-p_d" class=""><td class="stick stick-0 center"><input type="checkbox" checked="" onchange="toggleSelected('p_d', this.checked)"></td><td class="stick stick-1 center"><span class="badge id-badge" style="background:var(--hw)" title="Hardware">E</span></td><td class="stick stick-2 name-cell">6 Stainless Steel Piano Hinge 14 inch, Lacquered Black <span class="desc-sub">(B0D9HF56ZP)</span></td><td class="mnfctr-cell">Falcontoy</td><td class="num">$16.00</td><td class="num">1</td><td class="num">$16.00</td><td class="num tier-end">$1.60</td><td class="num">$16.00</td><td class="num">13</td><td class="num">$208.00</td><td class="num tier-end">$5.47</td><td class="num">$16.00</td><td class="num">38</td><td class="num">$608.00</td><td class="num tier-end">$5.33</td><td class="notes-cell">Screws included, 16.00 for 6</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_d')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_d')">🗑</button></td></tr><tr id="row-p_e" class="deselected"><td class="stick stick-0 center"><input type="checkbox" onchange="toggleSelected('p_e', this.checked)"></td><td class="stick stick-1 center"><span class="badge id-badge" style="background:var(--hw)" title="Hardware">F</span></td><td class="stick stick-2 name-cell">4 Adjustable Torque Hinges (0.3-2NM), Zinc Alloy, Black <span class="desc-sub">(ST1334)</span></td><td class="mnfctr-cell">Hevstil</td><td class="num">$15.99</td><td class="num">10</td><td class="num">$159.90</td><td class="num tier-end">$15.99</td><td class="num">$15.99</td><td class="num">38</td><td class="num">$607.62</td><td class="num tier-end">$15.99</td><td class="num">$15.99</td><td class="num">114</td><td class="num">$1,822.86</td><td class="num tier-end">$15.99</td><td class="notes-cell">Screws included, Tested Torque</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_e')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_e')">🗑</button></td></tr><tr id="row-p_f" class=""><td class="stick stick-0 center"><input type="checkbox" checked="" onchange="toggleSelected('p_f', this.checked)"></td><td class="stick stick-1 center"><span class="badge id-badge" style="background:var(--hw)" title="Hardware">G</span></td><td class="stick stick-2 name-cell">12 Double Roller Catch Latches, 40 mm, Solid Brass, Silver <span class="desc-sub">(CAH_62N)</span></td><td class="mnfctr-cell">HOJLKLD</td><td class="num">$13.99</td><td class="num">1</td><td class="num">$13.99</td><td class="num tier-end">$1.40</td><td class="num">$13.99</td><td class="num">4</td><td class="num">$55.96</td><td class="num tier-end">$1.47</td><td class="num">$13.99</td><td class="num">10</td><td class="num">$139.90</td><td class="num tier-end">$1.23</td><td class="notes-cell">Screws included, testing today</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_f')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_f')">🗑</button></td></tr><tr id="row-p_g" class="deselected"><td class="stick stick-0 center"><input type="checkbox" onchange="toggleSelected('p_g', this.checked)"></td><td class="stick stick-1 center"><span class="badge id-badge" style="background:var(--cry)" title="Carry">H</span></td><td class="stick stick-2 name-cell">Elastic Band, with logo</td><td class="mnfctr-cell">Many</td><td class="num">$3.00</td><td class="num">10</td><td class="num">$30.00</td><td class="num tier-end">$3.00</td><td class="num">$3.00</td><td class="num">38</td><td class="num">$114.00</td><td class="num tier-end">$3.00</td><td class="num">$3.00</td><td class="num">114</td><td class="num">$342.00</td><td class="num tier-end">$3.00</td><td class="notes-cell"></td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_g')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_g')">🗑</button></td></tr><tr id="row-p_h" class="deselected"><td class="stick stick-0 center"><input type="checkbox" onchange="toggleSelected('p_h', this.checked)"></td><td class="stick stick-1 center"><span class="badge id-badge" style="background:var(--ext)" title="Extras">I</span></td><td class="stick stick-2 name-cell">U-Channel Rubber Edge Banding, 20 ft, White or Black <span class="desc-sub">(B0D8TJ8BXB)</span></td><td class="mnfctr-cell">Yanruipro</td><td class="num">$32.99</td><td class="num">2</td><td class="num">$65.98</td><td class="num tier-end">$6.60</td><td class="num">$32.99</td><td class="num">5</td><td class="num">$164.95</td><td class="num tier-end">$4.34</td><td class="num">$32.99</td><td class="num">16</td><td class="num">$527.84</td><td class="num tier-end">$4.63</td><td class="notes-cell">Tested with heat gun, figures for two edges only, 7.5 games per roll</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_h')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_h')">🗑</button></td></tr></tbody>
+      <tbody id="bomTotals"><tr class="totals-row"><td class="stick stick-0"></td><td class="stick stick-1"></td><td class="stick stick-2 label-cell" colspan="1">Totals</td><td colspan="1"></td><td class="num"></td><td class="num"></td><td class="num">$704.99</td><td class="num tier-end">$70.50</td><td class="num"></td><td class="num"></td><td class="num">$263.96</td><td class="num tier-end">$6.95</td><td class="num"></td><td class="num"></td><td class="num">$747.90</td><td class="num tier-end">$6.56</td><td></td><td class="actions"></td></tr></tbody>
     </table>
   </div>
   <div class="add-row"><button class="btn subtle" onclick="openModal()">+ Add Part</button></div>
 
-  <div class="summary-grid" id="summaryGrid" style="margin-top:46px;"></div>
-  <div class="summary-note" id="selectedCount"></div>
+  <div class="summary-grid" id="summaryGrid" style="margin-top:46px;"><div class="summary-card"><div class="tier-label">10 Boards</div><div class="tier-total">$70.50 <span class="tier-total-unit">per board</span></div><div class="tier-per">$704.99 total</div></div><div class="summary-card"><div class="tier-label">38 Boards</div><div class="tier-total">$6.95 <span class="tier-total-unit">per board</span></div><div class="tier-per">$263.96 total</div></div><div class="summary-card"><div class="tier-label">100 Boards</div><div class="tier-total">$6.56 <span class="tier-total-unit">per board</span></div><div class="tier-per">$747.90 total</div></div></div>
+  <div class="summary-note" id="selectedCount">3 of 9 parts selected.</div>
 
 </div>
 
@@ -167,19 +167,13 @@
   <div class="modal">
     <h3 id="modalTitle">Edit Part</h3>
     <form id="modalForm" onsubmit="saveModal(event)">
-      <div class="field-row">
-        <div class="field">
-          <label for="f-letter">Row ID</label>
-          <input type="text" id="f-letter" maxlength="3" required>
-        </div>
-        <div class="field">
-          <label for="f-partnum">Part Number</label>
-          <input type="text" id="f-partnum">
-        </div>
+      <div class="field">
+        <label for="f-partnum">Part Number</label>
+        <input type="text" id="f-partnum">
       </div>
       <div class="field">
         <label for="f-name">Description / Name</label>
-        <input type="text" id="f-name" required>
+        <input type="text" id="f-name" required="">
       </div>
       <div class="field-row3">
         <div class="field">
@@ -189,6 +183,7 @@
             <option value="hw">Hardware</option>
             <option value="cry">Carry</option>
             <option value="ext">Extras</option>
+            <option value="forms">Forms</option>
           </select>
         </div>
         <div class="field">
@@ -203,13 +198,14 @@
           </select>
         </div>
       </div>
+      <div class="hint" style="margin-top:-8px;">New parts are added as the last row in their category, and the ID letters renumber automatically.</div>
       <div class="field">
         <label for="f-notes">Notes</label>
         <textarea id="f-notes"></textarea>
       </div>
       <div class="field">
         <label>Cost by Production Scale</label>
-        <div class="hint">Edit Cost and Qty, then use ↻ to fill in Total and Per-Board as a starting point — both stay manually editable.</div>
+        <div class="hint">Edit Cost and Qty — Total auto-calculates as Cost × Qty, and Per Board auto-calculates as Total ÷ number of boards.</div>
         <table class="tier-edit" id="tierEditTable"></table>
       </div>
       <div class="modal-actions">
@@ -222,27 +218,37 @@
 </div>
 
 <script>
-const TIERS=[38,100,200,500,1000];
+const TIERS=[10,38,100];
+// Per-board cost divides Total by the actual number of boards the purchased
+// quantities support, which can differ from the tier's nominal label (e.g.
+// bulk unit sizes mean the "100 board" order actually covers 114 boards'
+// worth of parts). Defaults to the tier label itself when not overridden.
+const TIER_DIVISOR={10:10, 38:38, 100:114};
+function divisorFor(t){ return TIER_DIVISOR[t]||t; }
+
+// ID letters are derived from a part's position in the list (A, B, C... then
+// AA, AB... past 26), so they always stay in sync with row order instead of
+// being manually assigned or stored.
+function letterForIndex(i){
+  let s="", n=i;
+  do{
+    s=String.fromCharCode(65+(n%26))+s;
+    n=Math.floor(n/26)-1;
+  }while(n>=0);
+  return s;
+}
 const CATEGORY_META=[
-  {key:"frm", name:"Frame", color:"--frm"},
-  {key:"hw",  name:"Hardware", color:"--hw"},
-  {key:"cry", name:"Carry", color:"--cry"},
-  {key:"ext", name:"Extras", color:"--ext"}
+  {key:"frm",   name:"Frame", color:"--frm"},
+  {key:"hw",    name:"Hardware", color:"--hw"},
+  {key:"cry",   name:"Carry", color:"--cry"},
+  {key:"ext",   name:"Extras", color:"--ext"},
+  {key:"forms", name:"Forms", color:"--forms"}
 ];
 const CAT_BY_KEY={}; CATEGORY_META.forEach(c=>CAT_BY_KEY[c.key]=c);
 
 function tierBlock(cost,qty,total,perBoard){ return {cost:cost, qty:qty, total:total, perBoard:perBoard}; }
 
-const DEFAULT_DATA = /*DATA_START*/{"parts":[
-  {"id":"p_a","letter":"A","partNumber":"BPV5519W","name":"Expanded PVC Plastic Sheet White 3/4 in","category":"frm","mnfctr":"Signworld","links":["https://display-wholesale.com/collections/pvc-sheet/products/expanded-pvc-sheet-19-mm-white"],"notes":"High freight costs, waiting on 3 more (local) quotes","selected":true,"tiers":{"38":{"cost":140.70,"qty":10,"total":1407.00,"perBoard":37.03},"100":{"cost":140.70,"qty":30,"total":4221.00,"perBoard":37.03},"200":{"cost":140.70,"qty":60,"total":8442.00,"perBoard":37.03},"500":{"cost":140.70,"qty":140,"total":19698.00,"perBoard":37.03},"1000":{"cost":140.70,"qty":270,"total":37989.00,"perBoard":37.03}}},
-  {"id":"p_b","letter":"B","partNumber":"BPV5513W","name":"Expanded PVC Plastic Sheet White 1/2 in","category":"frm","mnfctr":"Signworld","links":["https://display-wholesale.com/products/expanded-pvc-sheet-13-mm-white"],"notes":"Likely to affect sturdiness. Less material to screw into","selected":true,"tiers":{"38":{"cost":102.70,"qty":10,"total":1027.00,"perBoard":27.03},"100":{"cost":102.70,"qty":30,"total":3081.00,"perBoard":27.03},"200":{"cost":102.70,"qty":60,"total":6162.00,"perBoard":27.03},"500":{"cost":102.70,"qty":140,"total":14378.00,"perBoard":27.03},"1000":{"cost":102.70,"qty":270,"total":27729.00,"perBoard":27.03}}},
-  {"id":"p_c","letter":"C","partNumber":"717015885019","name":"4 Stainless Steel Piano Hinge 12 inch, Silver or Black","category":"hw","mnfctr":"YHNTGB","links":["https://www.amazon.com/gp/product/B0C7G9CX82"],"notes":"Screws included","selected":true,"tiers":{"38":{"cost":11.99,"qty":19,"total":227.81,"perBoard":6.00},"100":{"cost":11.99,"qty":57,"total":683.43,"perBoard":6.00},"200":{"cost":11.99,"qty":114,"total":1366.86,"perBoard":6.00},"500":{"cost":11.99,"qty":266,"total":3189.34,"perBoard":6.00},"1000":{"cost":11.99,"qty":513,"total":6150.87,"perBoard":6.00}}},
-  {"id":"p_d","letter":"D","partNumber":"B0D9HF56ZP","name":"6 Stainless Steel Piano Hinge 14 inch, Lacquered Black","category":"hw","mnfctr":"Falcontoy","links":["https://www.amazon.com/dp/B0D9HF56ZP"],"notes":"Screws included, 16.00 for 6","selected":true,"tiers":{"38":{"cost":16.00,"qty":13.0,"total":208.00,"perBoard":5.47},"100":{"cost":16.00,"qty":38,"total":608.00,"perBoard":5.33},"200":{"cost":16.00,"qty":76,"total":1216.00,"perBoard":5.33},"500":{"cost":16.00,"qty":178,"total":2848.00,"perBoard":5.35},"1000":{"cost":16.00,"qty":342,"total":5472.00,"perBoard":5.33}}},
-  {"id":"p_e","letter":"E","partNumber":"ST1334","name":"4 Adjustable Torque Hinges (0.3-2NM), Zinc Alloy, Black","category":"hw","mnfctr":"Hevstil","links":["https://www.amazon.com/dp/B0BRNH9C8Z"],"notes":"Screws included, Tested Torque","selected":true,"tiers":{"38":{"cost":15.99,"qty":38,"total":607.62,"perBoard":15.99},"100":{"cost":15.99,"qty":114,"total":1822.86,"perBoard":15.99},"200":{"cost":15.99,"qty":228,"total":3645.72,"perBoard":15.99},"500":{"cost":15.99,"qty":532,"total":8506.68,"perBoard":15.99},"1000":{"cost":15.99,"qty":1026,"total":16405.74,"perBoard":15.99}}},
-  {"id":"p_f","letter":"F","partNumber":"CAH_62N","name":"12 Double Roller Catch Latches, 40 mm, Solid Brass, Silver","category":"hw","mnfctr":"HOJLKLD","links":["https://www.amazon.com/dp/B0G4PBMTQR"],"notes":"Screws included, testing today","selected":true,"tiers":{"38":{"cost":13.99,"qty":4.0,"total":55.96,"perBoard":1.47},"100":{"cost":13.99,"qty":10.0,"total":139.90,"perBoard":1.23},"200":{"cost":13.99,"qty":19.0,"total":265.81,"perBoard":1.17},"500":{"cost":13.99,"qty":45.0,"total":629.55,"perBoard":1.18},"1000":{"cost":13.99,"qty":86.0,"total":1203.14,"perBoard":1.17}}},
-  {"id":"p_g","letter":"G","partNumber":"","name":"Elastic Band, with logo","category":"cry","mnfctr":"Many","links":["https://www.everythingbranded.com/product/yoga-resistance-bands","https://www.qualitylogoproducts.com/fitness/stretch-exercise-band","https://www.4allpromos.com/product/exercise-band-2?default"],"notes":"","selected":true,"tiers":{"38":{"cost":3.00,"qty":38,"total":114.00,"perBoard":3.00},"100":{"cost":3.00,"qty":114,"total":342.00,"perBoard":3.00},"200":{"cost":3.00,"qty":228,"total":684.00,"perBoard":3.00},"500":{"cost":3.00,"qty":532,"total":1596.00,"perBoard":3.00},"1000":{"cost":3.00,"qty":1026,"total":3078.00,"perBoard":3.00}}},
-  {"id":"p_h","letter":"H","partNumber":"B0D8TJ8BXB","name":"U-Channel Rubber Edge Banding, 20 ft, White or Black","category":"ext","mnfctr":"Yanruipro","links":["https://www.amazon.com/gp/product/B0D8TJ8BXB"],"notes":"Tested with heat gun, figures for two edges only, 7.5 games per roll","selected":true,"tiers":{"38":{"cost":32.99,"qty":5,"total":164.95,"perBoard":4.34},"100":{"cost":32.99,"qty":16,"total":527.84,"perBoard":4.63},"200":{"cost":32.99,"qty":31,"total":1022.69,"perBoard":4.49},"500":{"cost":32.99,"qty":71,"total":2342.29,"perBoard":4.40},"1000":{"cost":32.99,"qty":137,"total":4519.63,"perBoard":4.41}}}
-]}/*DATA_END*/;
+const DEFAULT_DATA = /*DATA_START*/{"parts":[{"id":"p_a","letter":"A","partNumber":"BPV5519W","name":"Expanded PVC Plastic Sheet White 3/4 in","category":"frm","mnfctr":"Signworld","links":["https://display-wholesale.com/collections/pvc-sheet/products/expanded-pvc-sheet-19-mm-white"],"notes":"High freight costs, waiting on 3 more (local) quotes","selected":false,"tiers":{"10":{"cost":140.7,"qty":3,"total":422.1,"perBoard":42.21},"38":{"cost":140.7,"qty":10,"total":1407,"perBoard":37.03},"100":{"cost":140.7,"qty":30,"total":4221,"perBoard":37.03},"200":{"cost":140.7,"qty":60,"total":8442,"perBoard":37.03},"500":{"cost":140.7,"qty":140,"total":19698,"perBoard":37.03},"1000":{"cost":140.7,"qty":270,"total":37989,"perBoard":37.03}}},{"id":"p_b","letter":"B","partNumber":"BPV5513W","name":"Expanded PVC Plastic Sheet White 1/2 in","category":"frm","mnfctr":"Signworld","links":["https://display-wholesale.com/products/expanded-pvc-sheet-13-mm-white"],"notes":"Likely to affect sturdiness. Less material to screw into","selected":false,"tiers":{"10":{"cost":102.7,"qty":3,"total":308.1,"perBoard":30.81},"38":{"cost":102.7,"qty":10,"total":1027,"perBoard":27.03},"100":{"cost":102.7,"qty":30,"total":3081,"perBoard":27.03},"200":{"cost":102.7,"qty":60,"total":6162,"perBoard":27.03},"500":{"cost":102.7,"qty":140,"total":14378,"perBoard":27.03},"1000":{"cost":102.7,"qty":270,"total":27729,"perBoard":27.03}}},{"partNumber":"","name":"Expanded PVC Plastic Sheet White 3/4 in","category":"frm","mnfctr":"E&T Plastics","selected":true,"notes":"Pick-up in Teterboro, NJ, or $75 delivery fee to South NJ","tiers":{"10":{"cost":225,"qty":3,"total":675,"perBoard":67.5},"38":{"cost":0,"qty":0,"total":0,"perBoard":0},"100":{"cost":0,"qty":0,"total":0,"perBoard":0}},"id":"p_8va1ojv"},{"id":"p_c","letter":"C","partNumber":"717015885019","name":"4 Stainless Steel Piano Hinge 12 inch, Silver or Black","category":"hw","mnfctr":"YHNTGB","links":["https://www.amazon.com/gp/product/B0C7G9CX82"],"notes":"Screws included","selected":false,"tiers":{"10":{"cost":11.99,"qty":5,"total":59.95,"perBoard":5.995},"38":{"cost":11.99,"qty":19,"total":227.81,"perBoard":6},"100":{"cost":11.99,"qty":57,"total":683.43,"perBoard":6},"200":{"cost":11.99,"qty":114,"total":1366.86,"perBoard":6},"500":{"cost":11.99,"qty":266,"total":3189.34,"perBoard":6},"1000":{"cost":11.99,"qty":513,"total":6150.87,"perBoard":6}}},{"id":"p_d","letter":"D","partNumber":"B0D9HF56ZP","name":"6 Stainless Steel Piano Hinge 14 inch, Lacquered Black","category":"hw","mnfctr":"Falcontoy","links":["https://www.amazon.com/dp/B0D9HF56ZP"],"notes":"Screws included, 16.00 for 6","selected":true,"tiers":{"10":{"cost":16,"qty":1,"total":16,"perBoard":1.6},"38":{"cost":16,"qty":13,"total":208,"perBoard":5.473684210526316},"100":{"cost":16,"qty":38,"total":608,"perBoard":5.333333333333333}}},{"id":"p_e","letter":"E","partNumber":"ST1334","name":"4 Adjustable Torque Hinges (0.3-2NM), Zinc Alloy, Black","category":"hw","mnfctr":"Hevstil","links":["https://www.amazon.com/dp/B0BRNH9C8Z"],"notes":"Screws included, Tested Torque","selected":false,"tiers":{"10":{"cost":15.99,"qty":10,"total":159.9,"perBoard":15.99},"38":{"cost":15.99,"qty":38,"total":607.62,"perBoard":15.99},"100":{"cost":15.99,"qty":114,"total":1822.86,"perBoard":15.99},"200":{"cost":15.99,"qty":228,"total":3645.72,"perBoard":15.99},"500":{"cost":15.99,"qty":532,"total":8506.68,"perBoard":15.99},"1000":{"cost":15.99,"qty":1026,"total":16405.74,"perBoard":15.99}}},{"id":"p_f","letter":"F","partNumber":"CAH_62N","name":"12 Double Roller Catch Latches, 40 mm, Solid Brass, Silver","category":"hw","mnfctr":"HOJLKLD","links":["https://www.amazon.com/dp/B0G4PBMTQR"],"notes":"Screws included, testing today","selected":true,"tiers":{"10":{"cost":13.99,"qty":1,"total":13.99,"perBoard":1.399},"38":{"cost":13.99,"qty":4,"total":55.96,"perBoard":1.4726315789473685},"100":{"cost":13.99,"qty":10,"total":139.9,"perBoard":1.2271929824561405}}},{"id":"p_g","letter":"G","partNumber":"","name":"Elastic Band, with logo","category":"cry","mnfctr":"Many","links":["https://www.everythingbranded.com/product/yoga-resistance-bands","https://www.qualitylogoproducts.com/fitness/stretch-exercise-band","https://www.4allpromos.com/product/exercise-band-2?default"],"notes":"","selected":false,"tiers":{"10":{"cost":3,"qty":10,"total":30,"perBoard":3},"38":{"cost":3,"qty":38,"total":114,"perBoard":3},"100":{"cost":3,"qty":114,"total":342,"perBoard":3},"200":{"cost":3,"qty":228,"total":684,"perBoard":3},"500":{"cost":3,"qty":532,"total":1596,"perBoard":3},"1000":{"cost":3,"qty":1026,"total":3078,"perBoard":3}}},{"id":"p_h","letter":"H","partNumber":"B0D8TJ8BXB","name":"U-Channel Rubber Edge Banding, 20 ft, White or Black","category":"ext","mnfctr":"Yanruipro","links":["https://www.amazon.com/gp/product/B0D8TJ8BXB"],"notes":"Tested with heat gun, figures for two edges only, 7.5 games per roll","selected":false,"tiers":{"10":{"cost":32.99,"qty":2,"total":65.98,"perBoard":6.598},"38":{"cost":32.99,"qty":5,"total":164.95,"perBoard":4.34},"100":{"cost":32.99,"qty":16,"total":527.84,"perBoard":4.63},"200":{"cost":32.99,"qty":31,"total":1022.69,"perBoard":4.49},"500":{"cost":32.99,"qty":71,"total":2342.29,"perBoard":4.4},"1000":{"cost":32.99,"qty":137,"total":4519.63,"perBoard":4.41}}}]}/*DATA_END*/;
 
 const DATA_KEY="touchPassBOMData_v1";
 const SELECTION_KEY="touchPassBOMSelection_v1";
@@ -250,6 +256,29 @@ const SELECTION_KEY="touchPassBOMSelection_v1";
 function isViewOnly(){ return document.documentElement.classList.contains("view-only"); }
 
 function uid(){ return "p_"+Math.random().toString(36).slice(2,9); }
+
+// Backfills any tier the loaded data is missing (e.g. a browser's saved copy
+// predates a new production-scale column being added) using the matching
+// part's values from the current DEFAULT_DATA, so old cached copies don't
+// silently show 0.00 for newly-added tiers.
+function migrateData(data){
+  const defaultById={};
+  DEFAULT_DATA.parts.forEach(p=>{ defaultById[p.id]=p; });
+  data.parts.forEach(p=>{
+    if(!p.tiers) p.tiers={};
+    const dp=defaultById[p.id];
+    TIERS.forEach(t=>{
+      const existing=p.tiers[t];
+      const isEmpty=!existing || (!existing.cost && !existing.qty && !existing.total && !existing.perBoard);
+      if(isEmpty && dp && dp.tiers && dp.tiers[t]){
+        p.tiers[t]=JSON.parse(JSON.stringify(dp.tiers[t]));
+      }else if(!existing){
+        p.tiers[t]={cost:0,qty:0,total:0,perBoard:0};
+      }
+    });
+  });
+  return data;
+}
 
 function loadData(){
   let data;
@@ -263,6 +292,7 @@ function loadData(){
       data = JSON.parse(JSON.stringify(DEFAULT_DATA));
     }
   }
+  data = migrateData(data);
   // Selection is tracked per-browser independent of edit mode, so any
   // visitor (including view-only) can explore without needing edit rights.
   try{
@@ -297,6 +327,13 @@ function fmtMoney(n){
   return "$"+n.toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
+// Total always derives from Cost × Qty (rather than a separately stored
+// value) so editing either one keeps Total, and therefore Per Board, correct.
+function tierTotal(tb){
+  if(!tb) return 0;
+  return (Number(tb.cost)||0)*(Number(tb.qty)||0);
+}
+
 function renderLegend(){
   const el=document.getElementById("legend");
   el.innerHTML=CATEGORY_META.map(c=>
@@ -307,14 +344,12 @@ function renderLegend(){
 function renderSummary(){
   const grid=document.getElementById("summaryGrid");
   grid.innerHTML=TIERS.map(t=>{
-    let total=0, perBoard=0;
+    let total=0;
     bomData.parts.forEach(p=>{
       if(!p.selected) return;
-      const tb=p.tiers[t];
-      if(!tb) return;
-      total+=(Number(tb.total)||0);
-      perBoard+=(Number(tb.perBoard)||0);
+      total+=tierTotal(p.tiers[t]);
     });
+    const perBoard=total/divisorFor(t);
     return '<div class="summary-card">'+
       '<div class="tier-label">'+t+' Boards</div>'+
       '<div class="tier-total">'+fmtMoney(perBoard)+' <span class="tier-total-unit">per board</span></div>'+
@@ -329,19 +364,17 @@ function renderTotalsRow(){
   const tb=document.getElementById("bomTotals");
   let cells='<td class="stick stick-0"></td><td class="stick stick-1"></td>'+
     '<td class="stick stick-2 label-cell" colspan="1">Totals</td>'+
-    '<td colspan="3"></td>';
+    '<td colspan="1"></td>';
   TIERS.forEach(t=>{
-    let total=0, perBoard=0;
+    let total=0;
     bomData.parts.forEach(p=>{
       if(!p.selected) return;
-      const tbk=p.tiers[t];
-      if(!tbk) return;
-      total+=(Number(tbk.total)||0);
-      perBoard+=(Number(tbk.perBoard)||0);
+      total+=tierTotal(p.tiers[t]);
     });
+    const perBoard=total/divisorFor(t);
     cells+='<td class="num"></td><td class="num"></td><td class="num">'+fmtMoney(total)+'</td><td class="num tier-end">'+fmtMoney(perBoard)+'</td>';
   });
-  cells+='<td class="actions"></td>';
+  cells+='<td></td><td class="actions"></td>';
   tb.innerHTML='<tr class="totals-row">'+cells+'</tr>';
 }
 
@@ -351,11 +384,10 @@ function renderThead(){
     '<th class="stick stick-0" rowspan="2"></th>'+
     '<th class="stick stick-1" rowspan="2">ID</th>'+
     '<th class="stick stick-2" rowspan="2">Description / Name</th>'+
-    '<th rowspan="2">Category</th>'+
-    '<th rowspan="2">Mnfctr</th>'+
-    '<th rowspan="2">Notes</th>';
+    '<th rowspan="2">Mnfctr</th>';
   TIERS.forEach(t=>{ row1+='<th colspan="4" class="tier-end">For '+t+' Boards</th>'; });
-  row1+='<th rowspan="2" class="actions-h">Actions</th></tr>';
+  row1+='<th rowspan="2">Notes</th>'+
+    '<th rowspan="2" class="actions-h">Actions</th></tr>';
 
   let row2='<tr class="subhead">';
   TIERS.forEach(()=>{
@@ -367,24 +399,26 @@ function renderThead(){
 
 function renderTbody(){
   const tb=document.getElementById("bomTbody");
-  tb.innerHTML=bomData.parts.map(p=>{
+  tb.innerHTML=bomData.parts.map((p,idx)=>{
     const cat=CAT_BY_KEY[p.category]||CATEGORY_META[0];
+    const letter=letterForIndex(idx);
     let tierCells="";
     TIERS.forEach(t=>{
-      const d=p.tiers[t]||{cost:0,qty:0,total:0,perBoard:0};
+      const d=p.tiers[t]||{cost:0,qty:0};
+      const total=tierTotal(d);
+      const perBoard=total/divisorFor(t);
       tierCells+='<td class="num">'+fmtMoney(d.cost)+'</td>'+
         '<td class="num">'+(d.qty)+'</td>'+
-        '<td class="num">'+fmtMoney(d.total)+'</td>'+
-        '<td class="num tier-end">'+fmtMoney(d.perBoard)+'</td>';
+        '<td class="num">'+fmtMoney(total)+'</td>'+
+        '<td class="num tier-end">'+fmtMoney(perBoard)+'</td>';
     });
     return '<tr id="row-'+p.id+'" class="'+(p.selected?"":"deselected")+'">'+
       '<td class="stick stick-0 center"><input type="checkbox" '+(p.selected?"checked":"")+' onchange="toggleSelected(\''+p.id+'\', this.checked)"></td>'+
-      '<td class="stick stick-1 center">'+p.letter+'</td>'+
+      '<td class="stick stick-1 center"><span class="badge id-badge" style="background:var('+cat.color+')" title="'+cat.name+'">'+letter+'</span></td>'+
       '<td class="stick stick-2 name-cell">'+p.name+(p.partNumber?' <span class="desc-sub">('+p.partNumber+')</span>':'')+'</td>'+
-      '<td><span class="badge" style="background:var('+cat.color+')">'+cat.name+'</span></td>'+
       '<td class="mnfctr-cell">'+(p.mnfctr||"")+'</td>'+
-      '<td class="notes-cell">'+(p.notes||"")+'</td>'+
       tierCells+
+      '<td class="notes-cell">'+(p.notes||"")+'</td>'+
       '<td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal(\''+p.id+'\')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete(\''+p.id+'\')">🗑</button></td>'+
       '</tr>';
   }).join("");
@@ -414,27 +448,28 @@ function toggleSelected(id, checked){
 /* ---------- Modal ---------- */
 
 function buildTierEditTable(tiersObj){
-  let html='<tr><th class="left">Boards</th><th>Cost</th><th>Qty</th><th>Total</th><th>Per Board</th><th></th></tr>';
+  let html='<tr><th class="left">Boards</th><th>Cost</th><th>Qty</th><th>Total</th><th>Per Board</th></tr>';
   TIERS.forEach(t=>{
-    const d=(tiersObj && tiersObj[t]) || {cost:0,qty:0,total:0,perBoard:0};
+    const d=(tiersObj && tiersObj[t]) || {cost:0,qty:0};
+    const cost=Number(d.cost)||0, qty=Number(d.qty)||0;
+    const total=cost*qty;
     html+='<tr>'+
       '<td class="tlabel">'+t+'</td>'+
-      '<td><input type="number" step="0.01" id="ft-'+t+'-cost" value="'+d.cost+'"></td>'+
-      '<td><input type="number" step="0.01" id="ft-'+t+'-qty" value="'+d.qty+'"></td>'+
-      '<td><input type="number" step="0.01" id="ft-'+t+'-total" value="'+d.total+'"></td>'+
-      '<td><input type="number" step="0.01" id="ft-'+t+'-perboard" value="'+d.perBoard+'"></td>'+
-      '<td><button type="button" class="auto-btn" title="Fill Total & Per Board from Cost × Qty" onclick="autoFillTier('+t+')">↻</button></td>'+
+      '<td><input type="number" step="0.01" id="ft-'+t+'-cost" value="'+d.cost+'" oninput="recalcTier('+t+')"></td>'+
+      '<td><input type="number" step="0.01" id="ft-'+t+'-qty" value="'+d.qty+'" oninput="recalcTier('+t+')"></td>'+
+      '<td class="perboard-display" id="ft-'+t+'-total-display">'+fmtMoney(total)+'</td>'+
+      '<td class="perboard-display" id="ft-'+t+'-perboard-display">'+fmtMoney(total/divisorFor(t))+'</td>'+
       '</tr>';
   });
   return html;
 }
 
-function autoFillTier(t){
+function recalcTier(t){
   const cost=parseFloat(document.getElementById("ft-"+t+"-cost").value)||0;
   const qty=parseFloat(document.getElementById("ft-"+t+"-qty").value)||0;
   const total=cost*qty;
-  document.getElementById("ft-"+t+"-total").value=total.toFixed(2);
-  document.getElementById("ft-"+t+"-perboard").value=(total/t).toFixed(2);
+  document.getElementById("ft-"+t+"-total-display").textContent=fmtMoney(total);
+  document.getElementById("ft-"+t+"-perboard-display").textContent=fmtMoney(total/divisorFor(t));
 }
 
 function openModal(partId){
@@ -443,7 +478,6 @@ function openModal(partId){
   const p=partId ? bomData.parts.find(x=>x.id===partId) : null;
   document.getElementById("modalTitle").textContent = p ? "Edit Part" : "Add Part";
   document.getElementById("modalDeleteBtn").style.display = p ? "" : "none";
-  document.getElementById("f-letter").value = p ? p.letter : nextLetter();
   document.getElementById("f-partnum").value = p ? p.partNumber : "";
   document.getElementById("f-name").value = p ? p.name : "";
   document.getElementById("f-category").value = p ? p.category : "frm";
@@ -452,15 +486,6 @@ function openModal(partId){
   document.getElementById("f-notes").value = p ? (p.notes||"") : "";
   document.getElementById("tierEditTable").innerHTML = buildTierEditTable(p ? p.tiers : null);
   document.getElementById("modalOverlay").classList.add("open");
-}
-
-function nextLetter(){
-  const used=new Set(bomData.parts.map(p=>p.letter));
-  for(let i=0;i<26;i++){
-    const L=String.fromCharCode(65+i);
-    if(!used.has(L)) return L;
-  }
-  return "X";
 }
 
 function closeModal(){
@@ -486,15 +511,17 @@ function saveModal(e){
   e.preventDefault();
   const tiers={};
   TIERS.forEach(t=>{
+    const cost=parseFloat(document.getElementById("ft-"+t+"-cost").value)||0;
+    const qty=parseFloat(document.getElementById("ft-"+t+"-qty").value)||0;
+    const total=cost*qty;
     tiers[t]={
-      cost: parseFloat(document.getElementById("ft-"+t+"-cost").value)||0,
-      qty: parseFloat(document.getElementById("ft-"+t+"-qty").value)||0,
-      total: parseFloat(document.getElementById("ft-"+t+"-total").value)||0,
-      perBoard: parseFloat(document.getElementById("ft-"+t+"-perboard").value)||0
+      cost: cost,
+      qty: qty,
+      total: total,
+      perBoard: total/divisorFor(t)
     };
   });
   const fields={
-    letter: document.getElementById("f-letter").value.trim()||"?",
     partNumber: document.getElementById("f-partnum").value.trim(),
     name: document.getElementById("f-name").value.trim(),
     category: document.getElementById("f-category").value,
@@ -508,7 +535,17 @@ function saveModal(e){
     if(p) Object.assign(p, fields);
   }else{
     fields.id=uid();
-    bomData.parts.push(fields);
+    // New parts land as the last row in their category group, not just at
+    // the very end of the table, so the category groupings stay intact.
+    let insertAt=-1;
+    for(let i=bomData.parts.length-1;i>=0;i--){
+      if(bomData.parts[i].category===fields.category){ insertAt=i; break; }
+    }
+    if(insertAt===-1){
+      bomData.parts.push(fields);
+    }else{
+      bomData.parts.splice(insertAt+1, 0, fields);
+    }
   }
   closeModal();
   saveData();
@@ -562,7 +599,9 @@ document.addEventListener("keydown", function(e){
 
 document.addEventListener("DOMContentLoaded", function(){
   renderAll();
+  saveData(); // persist any migration back-fill so it sticks on future loads
 });
 </script>
+
 
 </body></html>
