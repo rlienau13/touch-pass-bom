@@ -48,13 +48,11 @@
   .toolbar{display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-bottom:6px;}
   .save-status{font-size:11px; color:var(--muted); margin-right:auto;}
 
-  /* Two-column layout: BOM table on the left, Cost Summary as a sidebar */
-  .content-row{display:flex; align-items:flex-start; gap:24px; flex-wrap:wrap;}
-  .bom-col{flex:1 1 480px; min-width:0;}
-  .summary-col{flex:0 0 200px; width:200px;}
+  /* Cost Summary sits below the BOM table as its own full-width section */
+  .summary-col{margin-top:8px;}
 
   /* Summary cards */
-  .summary-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+  .summary-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:12px;}
   .summary-card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px;}
   .summary-card .tier-label{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:8px;}
   .summary-card .tier-total{font-size:21px; font-weight:800; line-height:1.1;}
@@ -71,8 +69,11 @@
 
   /* Table */
   .table-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:8px; background:#fff;}
-  table.bom{border-collapse:separate; border-spacing:0; font-size:12px; white-space:nowrap; width:100%;}
-  table.bom th, table.bom td{padding:7px 9px; border-bottom:1px solid var(--line); border-right:1px solid var(--line); vertical-align:middle;}
+  /* table-layout:fixed + the colgroup widths set in JS (renderColgroup) pin
+     the table's total width to exactly 100% of table-wrap, so it always
+     fits the window without a horizontal scrollbar. */
+  table.bom{border-collapse:separate; border-spacing:0; font-size:12px; table-layout:fixed; width:100%;}
+  table.bom th, table.bom td{padding:6px 7px; border-bottom:1px solid var(--line); border-right:1px solid var(--line); vertical-align:middle; overflow:hidden;}
   table.bom th.tier-end, table.bom td.tier-end{border-right:1.5px solid #b7b7b3;}
   table.bom thead th{background:#f6f6f5; text-align:left; font-size:10.3px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:800; border-bottom:2px solid var(--ink);}
   table.bom thead tr.tier-row th{text-align:center;}
@@ -84,18 +85,21 @@
   table.bom tbody tr.deselected .badge{opacity:.5;}
   table.bom tbody tr.deselected td.name-cell{color:#9a9a95; text-decoration:line-through; text-decoration-color:#cfcfca;}
   td.num{text-align:right; font-variant-numeric:tabular-nums;}
-  td.name-cell{white-space:normal; min-width:230px; max-width:280px; font-weight:700;}
-  td.notes-cell{white-space:normal; min-width:200px; max-width:260px; color:var(--muted); font-size:11.3px;}
+  td.name-cell{white-space:normal; overflow-wrap:break-word; overflow:visible; font-weight:700;}
+  td.notes-cell{white-space:normal; overflow-wrap:break-word; overflow:visible; color:var(--muted); font-size:11.3px;}
+  td.mnfctr-cell{white-space:normal; overflow-wrap:break-word; overflow:visible; color:var(--muted);}
   .desc-sub{font-weight:400; color:var(--muted); font-size:11.3px;}
-  td.mnfctr-cell{color:var(--muted);}
   td.center{text-align:center;}
 
   /* Sticky columns */
   .stick{position:sticky; background:#fff; z-index:2;}
   thead .stick{background:#f6f6f5; z-index:4;}
-  .stick-0{left:0; width:34px;}
-  .stick-1{left:34px; width:40px;}
-  .stick-2{left:74px;}
+  /* Left offsets are percentages (not px) so they stay correct against the
+     matching percentage column widths set in JS (renderColgroup), whatever
+     the table's actual rendered width ends up being. */
+  .stick-0{left:0;}
+  .stick-1{left:3%;}
+  .stick-2{left:7%;}
   tbody tr.deselected .stick{background:#fcfcfb;}
   tbody tr:hover .stick{background:#fafafa;}
 
@@ -141,13 +145,14 @@
   table.tier-edit td{padding:3px 5px; vertical-align:top;}
   table.tier-edit tr.tier-input-row td{padding-top:5px;}
   table.tier-edit tr.tier-unknown-row td{padding-top:0; padding-bottom:6px;}
-  table.tier-edit td.tlabel{font-weight:700; white-space:nowrap; vertical-align:middle;}
+  table.tier-edit td.tlabel{font-weight:700; white-space:normal; line-height:1.25; vertical-align:middle;}
   table.tier-edit input{width:100%; font-family:inherit; font-size:12px; padding:5px 6px; border:1px solid var(--line); border-radius:5px; text-align:right;}
   table.tier-edit .auto-btn{font-size:10px; padding:4px 6px; border-radius:5px; border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--muted);}
   table.tier-edit .auto-btn:hover{background:var(--line); color:var(--ink);}
   table.tier-edit td.perboard-display{text-align:right; font-weight:700; color:var(--muted); vertical-align:middle; padding-right:8px;}
   table.tier-edit input:disabled{background:#f3f3f2; color:var(--muted);}
   .unknown-toggle{display:flex; align-items:center; justify-content:flex-end; gap:4px; font-size:10px; font-weight:600; color:var(--muted); white-space:nowrap; text-transform:none;}
+  .tax-toggles{display:flex; flex-direction:column; align-items:flex-end; gap:2px;}
   .unknown-toggle input[type=checkbox]{width:12px; height:12px;}
   .unknown-val{font-style:italic; color:inherit; font-weight:400;}
 
@@ -164,33 +169,31 @@
 <div class="container">
 
   <div class="toolbar">
-    <span class="save-status" id="savedStamp">Saved to this browser · 06:56 PM</span>
+    <span class="save-status" id="savedStamp">Saved to this browser · 08:49 PM</span>
     <button class="btn subtle" id="resetBtn" onclick="resetDefaults()">Reset to Original</button>
     <button class="btn" id="exportBtn" onclick="exportHtml()">Export HTML</button>
   </div>
 
-  <div class="content-row">
-    <div class="bom-col">
+  <div class="bom-col">
       <h2 style="margin-top:16px;">Bill of Materials</h2>
       <div class="legend" id="legend"><span><span class="sw" style="background:var(--frm)"></span>Frame</span><span><span class="sw" style="background:var(--hw)"></span>Hardware</span><span><span class="sw" style="background:var(--cry)"></span>Carry</span><span><span class="sw" style="background:var(--ext)"></span>Extras</span><span><span class="sw" style="background:var(--forms)"></span>Forms</span></div>
 
       <div class="table-wrap">
         <table class="bom" id="bomTable">
-          <thead id="bomThead"><tr class="tier-row"><th class="stick stick-0" rowspan="2"></th><th class="stick stick-1" rowspan="2">ID</th><th class="stick stick-2" rowspan="2">Description / Name</th><th rowspan="2" class="tier-end">Mnfctr</th><th colspan="6" class="tier-end">For 10 Boards</th><th rowspan="2" class="tier-end notes-h">Notes</th><th rowspan="2" class="actions-h">Actions</th></tr><tr class="subhead"><th>Cost</th><th>Qty</th><th>Shipping</th><th>Tax</th><th>Total</th><th class="tier-end">Per Board</th></tr></thead>
-          <tbody id="bomTbody"><tr id="row-p_a" class="deselected"><td class="stick stick-0 center"><input type="checkbox" onchange="toggleSelected('p_a', this.checked)"></td><td class="stick stick-1 center"><a class="badge id-badge" style="background:var(--frm)" href="https://display-wholesale.com/collections/pvc-sheet/products/expanded-pvc-sheet-19-mm-white" target="_blank" rel="noopener" title="Frame · opens link">A</a></td><td class="stick stick-2 name-cell">Expanded PVC Plastic Sheet White 3/4 in <span class="desc-sub">(BPV5519W)</span></td><td class="mnfctr-cell tier-end">Signworld</td><td class="num">$164.70</td><td class="num">3</td><td class="num"><span class="unknown-val">Unknown</span></td><td class="num"><span class="unknown-val">Unknown</span></td><td class="num">$494.10</td><td class="num tier-end">$49.41</td><td class="notes-cell tier-end">High freight costs, waiting on 3 more (local) quotes</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_a')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_a')">🗑</button></td></tr><tr id="row-p_8va1ojv" class=""><td class="stick stick-0 center"><input type="checkbox" checked="" onchange="toggleSelected('p_8va1ojv', this.checked)"></td><td class="stick stick-1 center"><a class="badge id-badge" style="background:var(--frm)" href="https://e-tplastics.com/locations/e-t-teterboro-nj/" target="_blank" rel="noopener" title="Frame · opens link">B</a></td><td class="stick stick-2 name-cell">Expanded PVC Plastic Sheet White 3/4 in</td><td class="mnfctr-cell tier-end">E&amp;T Plastics</td><td class="num">$225.00</td><td class="num">3</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$675.00</td><td class="num tier-end">$67.50</td><td class="notes-cell tier-end">Free pick-up in Teterboro, NJ, or $75 delivery fee to South NJ</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_8va1ojv')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_8va1ojv')">🗑</button></td></tr><tr id="row-p_d" class=""><td class="stick stick-0 center"><input type="checkbox" checked="" onchange="toggleSelected('p_d', this.checked)"></td><td class="stick stick-1 center"><a class="badge id-badge" style="background:var(--hw)" href="https://www.amazon.com/dp/B0D9HF56ZP" target="_blank" rel="noopener" title="Hardware · opens link">C</a></td><td class="stick stick-2 name-cell">6 Stainless Steel Piano Hinge 14 inch, Lacquered Black <span class="desc-sub">(B0D9HF56ZP)</span></td><td class="mnfctr-cell tier-end">Falcontoy</td><td class="num">$16.00</td><td class="num">1</td><td class="num">$0.00</td><td class="num">$1.12</td><td class="num">$17.12</td><td class="num tier-end">$1.71</td><td class="notes-cell tier-end">Screws included, 16.00 for 6</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_d')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_d')">🗑</button></td></tr><tr id="row-p_f" class=""><td class="stick stick-0 center"><input type="checkbox" checked="" onchange="toggleSelected('p_f', this.checked)"></td><td class="stick stick-1 center"><a class="badge id-badge" style="background:var(--hw)" href="https://www.amazon.com/dp/B0G4PBMTQR" target="_blank" rel="noopener" title="Hardware · opens link">D</a></td><td class="stick stick-2 name-cell">12 Double Roller Catch Latches, 40 mm, Solid Brass, Silver <span class="desc-sub">(CAH_62N)</span></td><td class="mnfctr-cell tier-end">HOJLKLD</td><td class="num">$13.99</td><td class="num">1</td><td class="num">$0.00</td><td class="num">$0.98</td><td class="num">$14.97</td><td class="num tier-end">$1.50</td><td class="notes-cell tier-end">Screws included, testing today</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_f')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_f')">🗑</button></td></tr><tr id="row-p_g" class="deselected"><td class="stick stick-0 center"><input type="checkbox" onchange="toggleSelected('p_g', this.checked)"></td><td class="stick stick-1 center"><a class="badge id-badge" style="background:var(--cry)" href="https://www.everythingbranded.com/product/yoga-resistance-bands" target="_blank" rel="noopener" title="Carry · 3 links (opens 1st)">E</a></td><td class="stick stick-2 name-cell">Elastic Band, with logo</td><td class="mnfctr-cell tier-end">Many</td><td class="num">$4.00</td><td class="num">10</td><td class="num"><span class="unknown-val">Unknown</span></td><td class="num"><span class="unknown-val">Unknown</span></td><td class="num">$40.00</td><td class="num tier-end">$4.00</td><td class="notes-cell tier-end">Guesstimate based on multiple sources.</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_g')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_g')">🗑</button></td></tr><tr id="row-p_h" class="deselected"><td class="stick stick-0 center"><input type="checkbox" onchange="toggleSelected('p_h', this.checked)"></td><td class="stick stick-1 center"><a class="badge id-badge" style="background:var(--ext)" href="https://www.amazon.com/gp/product/B0D8TJ8BXB" target="_blank" rel="noopener" title="Extras · opens link">F</a></td><td class="stick stick-2 name-cell">U-Channel Rubber Edge Banding, 20 ft, White or Black <span class="desc-sub">(B0D8TJ8BXB)</span></td><td class="mnfctr-cell tier-end">Yanruipro</td><td class="num">$32.99</td><td class="num">2</td><td class="num">$0.00</td><td class="num">$4.62</td><td class="num">$70.60</td><td class="num tier-end">$7.06</td><td class="notes-cell tier-end">Tested with heat gun, figures for two edges only, 7.5 games per roll</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_h')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_h')">🗑</button></td></tr><tr id="row-p_54oo722" class=""><td class="stick stick-0 center"><input type="checkbox" checked="" onchange="toggleSelected('p_54oo722', this.checked)"></td><td class="stick stick-1 center"><a class="badge id-badge" style="background:var(--forms)" href="https://www.amazon.com/gp/product/B0C68MM9SD/ref=ox_sc_act_title_1?smid=A1IQQGR8TI3M3L&amp;th=1" target="_blank" rel="noopener" title="Forms · opens link">G</a></td><td class="stick stick-2 name-cell">Aluminum Flashing Roll, 0.2 mm, 20" x 10' <span class="desc-sub">(Therwen-Flashing-1149)</span></td><td class="mnfctr-cell tier-end">Therwen</td><td class="num">$33.99</td><td class="num">1</td><td class="num">$2.38</td><td class="num">$0.00</td><td class="num">$36.37</td><td class="num tier-end">$3.64</td><td class="notes-cell tier-end">For form making</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_54oo722')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_54oo722')">🗑</button></td></tr></tbody>
-          <tbody id="bomTotals"><tr class="totals-row"><td class="stick stick-0"></td><td class="stick stick-1"></td><td class="stick stick-2 label-cell" colspan="1"></td><td colspan="1" class="tier-end"></td><td class="num"></td><td class="num"></td><td class="num">$2.38</td><td class="num">$2.10</td><td class="num">$743.46</td><td class="num tier-end">$74.35</td><td class="tier-end"></td><td class="actions"></td></tr></tbody>
+          <colgroup id="bomColgroup"><col style="width:3%"><col style="width:4%"><col style="width:16%"><col style="width:6%"><col style="width:5.225%"><col style="width:2.475%"><col style="width:5.500%"><col style="width:5.500%"><col style="width:4.675%"><col style="width:4.125%"><col style="width:5.225%"><col style="width:2.475%"><col style="width:5.500%"><col style="width:5.500%"><col style="width:4.675%"><col style="width:4.125%"><col style="width:11%"><col style="width:5%"></colgroup>
+          <thead id="bomThead"><tr class="tier-row"><th class="stick stick-0" rowspan="2"></th><th class="stick stick-1" rowspan="2">ID</th><th class="stick stick-2" rowspan="2">Description / Name</th><th rowspan="2" class="tier-end">Mnfctr</th><th colspan="6" class="tier-end">For 3 Sheets (11 boards)</th><th colspan="6" class="tier-end">For 2 Sheets (7 boards)</th><th rowspan="2" class="tier-end notes-h">Notes</th><th rowspan="2" class="actions-h">Actions</th></tr><tr class="subhead"><th>Cost</th><th>Qty</th><th>Shipping</th><th>Tax</th><th>Total</th><th class="tier-end">Per Board</th><th>Cost</th><th>Qty</th><th>Shipping</th><th>Tax</th><th>Total</th><th class="tier-end">Per Board</th></tr></thead>
+          <tbody id="bomTbody"><tr id="row-p_a" class="deselected"><td class="stick stick-0 center"><input type="checkbox" onchange="toggleSelected('p_a', this.checked)"></td><td class="stick stick-1 center"><a class="badge id-badge" style="background:var(--frm)" href="https://display-wholesale.com/collections/pvc-sheet/products/expanded-pvc-sheet-19-mm-white" target="_blank" rel="noopener" title="Frame · opens link">A</a></td><td class="stick stick-2 name-cell">Expanded PVC Plastic Sheet White 3/4 in <span class="desc-sub">(BPV5519W)</span></td><td class="mnfctr-cell tier-end">Signworld</td><td class="num">$164.70</td><td class="num">3</td><td class="num"><span class="unknown-val">Unknown</span></td><td class="num"><span class="unknown-val">Unknown</span></td><td class="num">$494.10</td><td class="num tier-end">$44.92</td><td class="num">$164.70</td><td class="num">2</td><td class="num"><span class="unknown-val">Unknown</span></td><td class="num"><span class="unknown-val">Unknown</span></td><td class="num">$329.40</td><td class="num tier-end">$47.06</td><td class="notes-cell tier-end">High freight costs, waiting on 3 more (local) quotes</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_a')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_a')">🗑</button></td></tr><tr id="row-p_8va1ojv" class=""><td class="stick stick-0 center"><input type="checkbox" checked="" onchange="toggleSelected('p_8va1ojv', this.checked)"></td><td class="stick stick-1 center"><a class="badge id-badge" style="background:var(--frm)" href="https://e-tplastics.com/locations/e-t-teterboro-nj/" target="_blank" rel="noopener" title="Frame · opens link">B</a></td><td class="stick stick-2 name-cell">Expanded PVC Plastic Sheet White 3/4 in</td><td class="mnfctr-cell tier-end">E&amp;T Plastics</td><td class="num">$225.00</td><td class="num">3</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$675.00</td><td class="num tier-end">$61.36</td><td class="num">$225.00</td><td class="num">2</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$450.00</td><td class="num tier-end">$64.29</td><td class="notes-cell tier-end">Free pick-up in Teterboro, NJ, or $75 delivery fee to South NJ</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_8va1ojv')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_8va1ojv')">🗑</button></td></tr><tr id="row-p_d" class=""><td class="stick stick-0 center"><input type="checkbox" checked="" onchange="toggleSelected('p_d', this.checked)"></td><td class="stick stick-1 center"><a class="badge id-badge" style="background:var(--hw)" href="https://www.amazon.com/dp/B0D9HF56ZP" target="_blank" rel="noopener" title="Hardware · opens link">C</a></td><td class="stick stick-2 name-cell">6 Stainless Steel Piano Hinge 14 inch, Lacquered Black <span class="desc-sub">(B0D9HF56ZP)</span></td><td class="mnfctr-cell tier-end">Falcontoy</td><td class="num">$16.00</td><td class="num">3</td><td class="num">$0.00</td><td class="num">$3.36</td><td class="num">$51.36</td><td class="num tier-end">$4.67</td><td class="num">$16.00</td><td class="num">2</td><td class="num">$0.00</td><td class="num">$2.24</td><td class="num">$34.24</td><td class="num tier-end">$4.89</td><td class="notes-cell tier-end">Screws included, 16.00 for 6</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_d')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_d')">🗑</button></td></tr><tr id="row-p_f" class=""><td class="stick stick-0 center"><input type="checkbox" checked="" onchange="toggleSelected('p_f', this.checked)"></td><td class="stick stick-1 center"><a class="badge id-badge" style="background:var(--hw)" href="https://www.amazon.com/dp/B0G4PBMTQR" target="_blank" rel="noopener" title="Hardware · opens link">D</a></td><td class="stick stick-2 name-cell">12 Double Roller Catch Latches, 40 mm, Solid Brass, Silver <span class="desc-sub">(CAH_62N)</span></td><td class="mnfctr-cell tier-end">HOJLKLD</td><td class="num">$13.99</td><td class="num">0</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num tier-end">$0.00</td><td class="num">$13.99</td><td class="num">0</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num tier-end">$0.00</td><td class="notes-cell tier-end">Screws included, testing today</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_f')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_f')">🗑</button></td></tr><tr id="row-p_g" class="deselected"><td class="stick stick-0 center"><input type="checkbox" onchange="toggleSelected('p_g', this.checked)"></td><td class="stick stick-1 center"><a class="badge id-badge" style="background:var(--cry)" href="https://www.everythingbranded.com/product/yoga-resistance-bands" target="_blank" rel="noopener" title="Carry · 3 links (opens 1st)">E</a></td><td class="stick stick-2 name-cell">Elastic Band, with logo</td><td class="mnfctr-cell tier-end">Many</td><td class="num">$4.00</td><td class="num">10</td><td class="num"><span class="unknown-val">Unknown</span></td><td class="num"><span class="unknown-val">Unknown</span></td><td class="num">$40.00</td><td class="num tier-end">$3.64</td><td class="num">$4.00</td><td class="num">7</td><td class="num"><span class="unknown-val">Unknown</span></td><td class="num"><span class="unknown-val">Unknown</span></td><td class="num">$28.00</td><td class="num tier-end">$4.00</td><td class="notes-cell tier-end">Guesstimate based on multiple sources.</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_g')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_g')">🗑</button></td></tr><tr id="row-p_h" class="deselected"><td class="stick stick-0 center"><input type="checkbox" onchange="toggleSelected('p_h', this.checked)"></td><td class="stick stick-1 center"><a class="badge id-badge" style="background:var(--ext)" href="https://www.amazon.com/gp/product/B0D8TJ8BXB" target="_blank" rel="noopener" title="Extras · opens link">F</a></td><td class="stick stick-2 name-cell">U-Channel Rubber Edge Banding, 20 ft, White or Black <span class="desc-sub">(B0D8TJ8BXB)</span></td><td class="mnfctr-cell tier-end">Yanruipro</td><td class="num">$32.99</td><td class="num">2</td><td class="num">$0.00</td><td class="num">$4.62</td><td class="num">$70.60</td><td class="num tier-end">$6.42</td><td class="num">$32.99</td><td class="num">2</td><td class="num">$0.00</td><td class="num">$4.62</td><td class="num">$70.60</td><td class="num tier-end">$10.09</td><td class="notes-cell tier-end">Tested with heat gun, figures for two edges only, 7.5 games per roll</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_h')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_h')">🗑</button></td></tr><tr id="row-p_54oo722" class=""><td class="stick stick-0 center"><input type="checkbox" checked="" onchange="toggleSelected('p_54oo722', this.checked)"></td><td class="stick stick-1 center"><a class="badge id-badge" style="background:var(--forms)" href="https://www.amazon.com/gp/product/B0C68MM9SD/ref=ox_sc_act_title_1?smid=A1IQQGR8TI3M3L&amp;th=1" target="_blank" rel="noopener" title="Forms · opens link">G</a></td><td class="stick stick-2 name-cell">Aluminum Flashing Roll, 0.2 mm, 20" x 10' <span class="desc-sub">(Therwen-Flashing-1149)</span></td><td class="mnfctr-cell tier-end">Therwen</td><td class="num">$33.99</td><td class="num">1</td><td class="num">$0.00</td><td class="num">$2.38</td><td class="num">$36.37</td><td class="num tier-end">$3.31</td><td class="num">$33.99</td><td class="num">1</td><td class="num">$0.00</td><td class="num">$2.38</td><td class="num">$36.37</td><td class="num tier-end">$5.20</td><td class="notes-cell tier-end">For form making</td><td class="actions"><button type="button" class="icon-btn" title="Edit part" onclick="openModal('p_54oo722')">✏️</button><button type="button" class="icon-btn" title="Delete part" onclick="quickDelete('p_54oo722')">🗑</button></td></tr></tbody>
+          <tbody id="bomTotals"><tr class="totals-row"><td class="stick stick-0"></td><td class="stick stick-1"></td><td class="stick stick-2 label-cell" colspan="1"></td><td colspan="1" class="tier-end"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">$762.73</td><td class="num tier-end">$69.34</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">$520.61</td><td class="num tier-end">$74.37</td><td class="tier-end"></td><td class="actions"></td></tr></tbody>
         </table>
       </div>
       <div class="add-row"><button class="btn subtle" onclick="openModal()">+ Add Part</button></div>
       <div class="rec-row"><button class="btn subtle" onclick="applyReesesRec()">Reese's Rec</button></div>
-    </div>
+  </div>
 
-    <div class="summary-col">
-      <h2 style="margin-top:16px; visibility:hidden;" aria-hidden="true">Cost Summary</h2>
-      <div class="legend" style="visibility:hidden;" aria-hidden="true">&nbsp;</div>
-      <div class="summary-grid" id="summaryGrid"><div class="summary-card"><div class="tier-label">10 Boards — Parts</div><div class="tier-total">$73.90 <span class="tier-total-unit">per board</span></div><div class="tier-per">$738.98 total</div></div><div class="summary-card"><div class="tier-label">10 Boards — Shipping</div><div class="tier-total">$0.24 <span class="tier-total-unit">per board</span></div><div class="tier-per">$2.38 total</div></div><div class="summary-card"><div class="tier-label">10 Boards — Taxes</div><div class="tier-total">$0.21 <span class="tier-total-unit">per board</span></div><div class="tier-per">$2.10 total</div></div><div class="summary-card grand-total-card"><div class="tier-label">10 Boards — Grand Total</div><div class="tier-total">$74.35 <span class="tier-total-unit">per board</span></div><div class="tier-per">$743.46 total</div></div></div>
-      <div class="summary-note" id="selectedCount">4 of 7 parts selected.</div>
-    </div>
+  <div class="summary-col">
+    <h2>Cost Summary</h2>
+    <div class="summary-grid" id="summaryGrid"><div class="summary-card"><div class="tier-label">3 Sheets (11 boards) — Parts</div><div class="tier-total">$68.82 <span class="tier-total-unit">per board</span></div><div class="tier-per">$756.99 total</div></div><div class="summary-card"><div class="tier-label">3 Sheets (11 boards) — Shipping/Taxes</div><div class="tier-total">$0.52 <span class="tier-total-unit">per board</span></div><div class="tier-per">$5.74 total</div></div><div class="summary-card grand-total-card"><div class="tier-label">3 Sheets (11 boards) — Grand Total</div><div class="tier-total">$69.34 <span class="tier-total-unit">per board</span></div><div class="tier-per">$762.73 total</div></div><div class="summary-card"><div class="tier-label">2 Sheets (7 boards) — Parts</div><div class="tier-total">$73.71 <span class="tier-total-unit">per board</span></div><div class="tier-per">$515.99 total</div></div><div class="summary-card"><div class="tier-label">2 Sheets (7 boards) — Shipping/Taxes</div><div class="tier-total">$0.66 <span class="tier-total-unit">per board</span></div><div class="tier-per">$4.62 total</div></div><div class="summary-card grand-total-card"><div class="tier-label">2 Sheets (7 boards) — Grand Total</div><div class="tier-total">$74.37 <span class="tier-total-unit">per board</span></div><div class="tier-per">$520.61 total</div></div></div>
+    <div class="summary-note" id="selectedCount">4 of 7 parts selected.</div>
   </div>
 
 </div>
@@ -247,7 +250,7 @@
       </div>
       <div class="field">
         <label>Cost by Production Scale</label>
-        <div class="hint">Edit Cost and Qty — Total auto-calculates as Cost × Qty, and Per Board auto-calculates as Total ÷ number of boards.</div>
+        <div class="hint">Edit Cost and Qty — Total auto-calculates as Cost × Qty, and the per-unit figure auto-calculates as Total ÷ quantity for that scale.</div>
         <table class="tier-edit" id="tierEditTable"></table>
       </div>
       <div class="modal-actions">
@@ -260,13 +263,18 @@
 </div>
 
 <script>
-const TIERS=[10];
-// Per-board cost divides Total by the actual number of boards the purchased
-// quantities support, which can differ from the tier's nominal label (e.g.
-// bulk unit sizes mean the "100 board" order actually covers 114 boards'
-// worth of parts). Defaults to the tier label itself when not overridden.
-const TIER_DIVISOR={10:10, 38:38, 100:114};
+const TIERS=[10, "2sheets"];
+// Per-unit cost divides Total by the actual quantity the purchased amounts
+// support, which can differ from the tier's nominal label (e.g. bulk unit
+// sizes mean the "100 board" order actually covers 114 boards' worth of
+// parts). Defaults to the tier label itself when not overridden.
+const TIER_DIVISOR={10:11, 38:38, 100:114, "2sheets":7};
 function divisorFor(t){ return TIER_DIVISOR[t]||t; }
+// Human-readable group label (used for section headers and row labels) and
+// the singular unit name (used to build "Per Board" / "per board" style
+// text) for each tier. Add an entry here whenever a new tier is introduced.
+const TIER_LABEL={10:"3 Sheets (11 boards)", 38:"38 Boards", 100:"100 Boards", "2sheets":"2 Sheets (7 boards)"};
+const TIER_UNIT={10:"Board", 38:"Board", 100:"Board", "2sheets":"Board"};
 
 // ID letters are derived from a part's position in the list (A, B, C... then
 // AA, AB... past 26), so they always stay in sync with row order instead of
@@ -290,7 +298,7 @@ const CAT_BY_KEY={}; CATEGORY_META.forEach(c=>CAT_BY_KEY[c.key]=c);
 
 function tierBlock(cost,qty,total,perBoard){ return {cost:cost, qty:qty, total:total, perBoard:perBoard}; }
 
-const DEFAULT_DATA = /*DATA_START*/{"parts":[{"id":"p_a","letter":"A","partNumber":"BPV5519W","name":"Expanded PVC Plastic Sheet White 3/4 in","category":"frm","mnfctr":"Signworld","links":["https://display-wholesale.com/collections/pvc-sheet/products/expanded-pvc-sheet-19-mm-white"],"notes":"High freight costs, waiting on 3 more (local) quotes","selected":false,"tiers":{"10":{"cost":164.7,"qty":3,"shipping":0,"shippingUnknown":true,"tax":0,"taxUnknown":true,"total":494.09999999999997,"perBoard":49.41}},"recPick":false},{"partNumber":"","name":"Expanded PVC Plastic Sheet White 3/4 in","category":"frm","mnfctr":"E&T Plastics","selected":true,"notes":"Free pick-up in Teterboro, NJ, or $75 delivery fee to South NJ","tiers":{"10":{"cost":225,"qty":3,"shipping":0,"shippingUnknown":false,"tax":0,"taxUnknown":false,"total":675,"perBoard":67.5}},"id":"p_8va1ojv","links":["https://e-tplastics.com/locations/e-t-teterboro-nj/"],"recPick":true},{"id":"p_d","letter":"D","partNumber":"B0D9HF56ZP","name":"6 Stainless Steel Piano Hinge 14 inch, Lacquered Black","category":"hw","mnfctr":"Falcontoy","links":["https://www.amazon.com/dp/B0D9HF56ZP"],"notes":"Screws included, 16.00 for 6","selected":true,"tiers":{"10":{"cost":16,"qty":1,"shipping":0,"shippingUnknown":false,"tax":1.12,"taxUnknown":false,"total":17.12,"perBoard":1.7120000000000002}},"recPick":true},{"id":"p_f","letter":"F","partNumber":"CAH_62N","name":"12 Double Roller Catch Latches, 40 mm, Solid Brass, Silver","category":"hw","mnfctr":"HOJLKLD","links":["https://www.amazon.com/dp/B0G4PBMTQR"],"notes":"Screws included, testing today","selected":true,"tiers":{"10":{"cost":13.99,"qty":1,"shipping":0,"shippingUnknown":false,"tax":0.98,"taxUnknown":false,"total":14.97,"perBoard":1.497}},"recPick":true},{"id":"p_g","letter":"G","partNumber":"","name":"Elastic Band, with logo","category":"cry","mnfctr":"Many","links":["https://www.everythingbranded.com/product/yoga-resistance-bands","https://www.qualitylogoproducts.com/fitness/stretch-exercise-band","https://www.4allpromos.com/product/exercise-band-2?default"],"notes":"Guesstimate based on multiple sources.","selected":false,"tiers":{"10":{"cost":4,"qty":10,"shipping":0,"shippingUnknown":true,"tax":0,"taxUnknown":true,"total":40,"perBoard":4}}},{"id":"p_h","letter":"H","partNumber":"B0D8TJ8BXB","name":"U-Channel Rubber Edge Banding, 20 ft, White or Black","category":"ext","mnfctr":"Yanruipro","links":["https://www.amazon.com/gp/product/B0D8TJ8BXB"],"notes":"Tested with heat gun, figures for two edges only, 7.5 games per roll","selected":false,"tiers":{"10":{"cost":32.99,"qty":2,"shipping":0,"shippingUnknown":false,"tax":4.62,"taxUnknown":false,"total":70.60000000000001,"perBoard":7.0600000000000005}}},{"partNumber":"Therwen-Flashing-1149","name":"Aluminum Flashing Roll, 0.2 mm, 20\" x 10'","category":"forms","mnfctr":"Therwen","selected":true,"notes":"For form making","tiers":{"10":{"cost":33.99,"qty":1,"shipping":2.38,"shippingUnknown":false,"tax":0,"taxUnknown":false,"total":36.370000000000005,"perBoard":3.6370000000000005}},"id":"p_54oo722","links":["https://www.amazon.com/gp/product/B0C68MM9SD/ref=ox_sc_act_title_1?smid=A1IQQGR8TI3M3L&th=1"],"recPick":true}]}/*DATA_END*/;
+const DEFAULT_DATA = /*DATA_START*/{"parts":[{"id":"p_a","letter":"A","partNumber":"BPV5519W","name":"Expanded PVC Plastic Sheet White 3/4 in","category":"frm","mnfctr":"Signworld","links":["https://display-wholesale.com/collections/pvc-sheet/products/expanded-pvc-sheet-19-mm-white"],"notes":"High freight costs, waiting on 3 more (local) quotes","selected":false,"tiers":{"10":{"cost":164.7,"qty":3,"shipping":0,"shippingUnknown":true,"tax":0,"taxUnknown":true,"total":494.09999999999997,"perBoard":49.41},"2sheets":{"cost":164.7,"qty":2,"shipping":0,"shippingUnknown":true,"tax":0,"taxUnknown":true,"total":329.4,"perBoard":47.05714285714286}},"recPick":false},{"partNumber":"","name":"Expanded PVC Plastic Sheet White 3/4 in","category":"frm","mnfctr":"E&T Plastics","selected":true,"notes":"Free pick-up in Teterboro, NJ, or $75 delivery fee to South NJ","tiers":{"10":{"cost":225,"qty":3,"shipping":0,"shippingUnknown":false,"tax":0,"taxUnknown":false,"total":675,"perBoard":67.5},"2sheets":{"cost":225,"qty":2,"shipping":0,"shippingUnknown":false,"tax":0,"taxUnknown":false,"total":450,"perBoard":64.28571428571429}},"id":"p_8va1ojv","links":["https://e-tplastics.com/locations/e-t-teterboro-nj/"],"recPick":true},{"id":"p_d","letter":"D","partNumber":"B0D9HF56ZP","name":"6 Stainless Steel Piano Hinge 14 inch, Lacquered Black","category":"hw","mnfctr":"Falcontoy","links":["https://www.amazon.com/dp/B0D9HF56ZP"],"notes":"Screws included, 16.00 for 6","selected":true,"tiers":{"10":{"cost":16,"qty":3,"shipping":0,"shippingUnknown":false,"tax":3.36,"taxUnknown":false,"taxSevenPercent":true,"total":51.36,"perBoard":5.136},"2sheets":{"cost":16,"qty":2,"shipping":0,"shippingUnknown":false,"tax":2.24,"taxUnknown":false,"taxSevenPercent":true,"total":34.24,"perBoard":4.8914285714285715}},"recPick":true},{"id":"p_f","letter":"F","partNumber":"CAH_62N","name":"12 Double Roller Catch Latches, 40 mm, Solid Brass, Silver","category":"hw","mnfctr":"HOJLKLD","links":["https://www.amazon.com/dp/B0G4PBMTQR"],"notes":"Screws included, testing today","selected":true,"tiers":{"10":{"cost":13.99,"qty":0,"shipping":0,"shippingUnknown":false,"tax":0,"taxUnknown":false,"taxSevenPercent":true,"total":0,"perBoard":0},"2sheets":{"cost":13.99,"qty":0,"shipping":0,"shippingUnknown":false,"tax":0,"taxUnknown":false,"taxSevenPercent":true,"total":0,"perBoard":0}},"recPick":true},{"id":"p_g","letter":"G","partNumber":"","name":"Elastic Band, with logo","category":"cry","mnfctr":"Many","links":["https://www.everythingbranded.com/product/yoga-resistance-bands","https://www.qualitylogoproducts.com/fitness/stretch-exercise-band","https://www.4allpromos.com/product/exercise-band-2?default"],"notes":"Guesstimate based on multiple sources.","selected":false,"tiers":{"10":{"cost":4,"qty":10,"shipping":0,"shippingUnknown":true,"tax":0,"taxUnknown":true,"total":40,"perBoard":4},"2sheets":{"cost":4,"qty":7,"shipping":0,"shippingUnknown":true,"tax":0,"taxUnknown":true,"total":28,"perBoard":4}},"recPick":false},{"id":"p_h","letter":"H","partNumber":"B0D8TJ8BXB","name":"U-Channel Rubber Edge Banding, 20 ft, White or Black","category":"ext","mnfctr":"Yanruipro","links":["https://www.amazon.com/gp/product/B0D8TJ8BXB"],"notes":"Tested with heat gun, figures for two edges only, 7.5 games per roll","selected":false,"tiers":{"10":{"cost":32.99,"qty":2,"shipping":0,"shippingUnknown":false,"tax":4.62,"taxUnknown":false,"taxSevenPercent":true,"total":70.60000000000001,"perBoard":7.0600000000000005},"2sheets":{"cost":32.99,"qty":2,"shipping":0,"shippingUnknown":false,"tax":4.62,"taxUnknown":false,"taxSevenPercent":true,"total":70.60000000000001,"perBoard":10.085714285714287}},"recPick":false},{"partNumber":"Therwen-Flashing-1149","name":"Aluminum Flashing Roll, 0.2 mm, 20\" x 10'","category":"forms","mnfctr":"Therwen","selected":true,"notes":"For form making","tiers":{"10":{"cost":33.99,"qty":1,"shipping":0,"shippingUnknown":false,"tax":2.38,"taxUnknown":false,"taxSevenPercent":true,"total":36.370000000000005,"perBoard":3.6370000000000005},"2sheets":{"cost":33.99,"qty":1,"shipping":0,"shippingUnknown":false,"tax":2.38,"taxUnknown":false,"taxSevenPercent":true,"total":36.370000000000005,"perBoard":5.195714285714287}},"id":"p_54oo722","links":["https://www.amazon.com/gp/product/B0C68MM9SD/ref=ox_sc_act_title_1?smid=A1IQQGR8TI3M3L&th=1"],"recPick":true}]}/*DATA_END*/;
 
 const DATA_KEY="touchPassBOMData_v1";
 const SELECTION_KEY="touchPassBOMSelection_v1";
@@ -389,7 +397,9 @@ function effShipping(tb){
   return Number(tb.shipping)||0;
 }
 function effTax(tb){
-  if(!tb || tb.taxUnknown) return 0;
+  if(!tb) return 0;
+  if(tb.taxUnknown) return 0;
+  if(tb.taxSevenPercent) return partOnlyTotal(tb)*0.07;
   return Number(tb.tax)||0;
 }
 function tierTotal(tb){
@@ -422,13 +432,13 @@ function renderSummary(){
     const card=(label,total,extraClass)=>{
       const perBoard=total/divisor;
       return '<div class="summary-card'+(extraClass?" "+extraClass:"")+'">'+
-        '<div class="tier-label">'+t+' Boards — '+label+'</div>'+
-        '<div class="tier-total">'+fmtMoney(perBoard)+' <span class="tier-total-unit">per board</span></div>'+
+        '<div class="tier-label">'+TIER_LABEL[t]+' — '+label+'</div>'+
+        '<div class="tier-total">'+fmtMoney(perBoard)+' <span class="tier-total-unit">per '+TIER_UNIT[t].toLowerCase()+'</span></div>'+
         '<div class="tier-per">'+fmtMoney(total)+' total</div>'+
         '</div>';
     };
-    // Parts (cost × qty) + Shipping + Taxes, broken out, then the grand total.
-    html+=card("Parts", partsTotal)+card("Shipping", shipTotal)+card("Taxes", taxTotal)+card("Grand Total", grand, "grand-total-card");
+    // Parts (cost × qty) + combined Shipping/Taxes, broken out, then the grand total.
+    html+=card("Parts", partsTotal)+card("Shipping/Taxes", shipTotal+taxTotal)+card("Grand Total", grand, "grand-total-card");
   });
   grid.innerHTML=html;
   const n=bomData.parts.filter(p=>p.selected).length;
@@ -451,10 +461,43 @@ function renderTotalsRow(){
       tax+=effTax(tbk);
     });
     const perBoard=total/divisorFor(t);
-    cells+='<td class="num"></td><td class="num"></td><td class="num">'+fmtMoney(ship)+'</td><td class="num">'+fmtMoney(tax)+'</td><td class="num">'+fmtMoney(total)+'</td><td class="num tier-end">'+fmtMoney(perBoard)+'</td>';
+    cells+='<td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">'+fmtMoney(total)+'</td><td class="num tier-end">'+fmtMoney(perBoard)+'</td>';
   });
   cells+='<td class="tier-end"></td><td class="actions"></td>';
   tb.innerHTML='<tr class="totals-row">'+cells+'</tr>';
+}
+
+// Pins the whole table to exactly 100% of the table-wrap's width (via
+// table-layout:fixed on table.bom) so it always fits the browser window
+// without horizontal scrolling, no matter how many tiers are shown. Fixed
+// columns (checkbox, ID, Description, Mnfctr, Notes, Actions) get a set
+// share of the width; whatever's left is split evenly across the tier
+// groups and, within each group, across its six sub-columns.
+function renderColgroup(){
+  const colgroup=document.getElementById("bomColgroup");
+  const fixedPct={stick0:3, stick1:4, name:16, mnfctr:6, notes:11, actions:5};
+  // The Actions column is hidden entirely in view-only mode (nothing to edit
+  // there), so its share of the width is folded into Notes instead of being
+  // left behind as a blank strip on the right.
+  if(isViewOnly()){
+    fixedPct.notes+=fixedPct.actions;
+    fixedPct.actions=0;
+  }
+  const fixedSum=Object.values(fixedPct).reduce((a,b)=>a+b,0);
+  const tierGroupPct=(100-fixedSum)/Math.max(TIERS.length,1);
+  const subWeight={cost:0.19, qty:0.09, shipping:0.20, tax:0.20, total:0.17, perboard:0.15};
+  let html='<col style="width:'+fixedPct.stick0+'%">'+
+    '<col style="width:'+fixedPct.stick1+'%">'+
+    '<col style="width:'+fixedPct.name+'%">'+
+    '<col style="width:'+fixedPct.mnfctr+'%">';
+  TIERS.forEach(()=>{
+    ["cost","qty","shipping","tax","total","perboard"].forEach(k=>{
+      html+='<col style="width:'+(tierGroupPct*subWeight[k]).toFixed(3)+'%">';
+    });
+  });
+  html+='<col style="width:'+fixedPct.notes+'%">'+
+    '<col style="width:'+fixedPct.actions+'%">';
+  colgroup.innerHTML=html;
 }
 
 function renderThead(){
@@ -464,13 +507,13 @@ function renderThead(){
     '<th class="stick stick-1" rowspan="2">ID</th>'+
     '<th class="stick stick-2" rowspan="2">Description / Name</th>'+
     '<th rowspan="2" class="tier-end">Mnfctr</th>';
-  TIERS.forEach(t=>{ row1+='<th colspan="6" class="tier-end">For '+t+' Boards</th>'; });
+  TIERS.forEach(t=>{ row1+='<th colspan="6" class="tier-end">For '+TIER_LABEL[t]+'</th>'; });
   row1+='<th rowspan="2" class="tier-end notes-h">Notes</th>'+
     '<th rowspan="2" class="actions-h">Actions</th></tr>';
 
   let row2='<tr class="subhead">';
-  TIERS.forEach(()=>{
-    row2+='<th>Cost</th><th>Qty</th><th>Shipping</th><th>Tax</th><th>Total</th><th class="tier-end">Per Board</th>';
+  TIERS.forEach(t=>{
+    row2+='<th>Cost</th><th>Qty</th><th>Shipping</th><th>Tax</th><th>Total</th><th class="tier-end">Per '+TIER_UNIT[t]+'</th>';
   });
   row2+='</tr>';
   thead.innerHTML=row1+row2;
@@ -502,7 +545,7 @@ function renderTbody(){
       tierCells+='<td class="num">'+fmtMoney(d.cost)+'</td>'+
         '<td class="num">'+(d.qty)+'</td>'+
         '<td class="num">'+(d.shippingUnknown?'<span class="unknown-val">Unknown</span>':fmtMoney(d.shipping||0))+'</td>'+
-        '<td class="num">'+(d.taxUnknown?'<span class="unknown-val">Unknown</span>':fmtMoney(d.tax||0))+'</td>'+
+        '<td class="num">'+(d.taxUnknown?'<span class="unknown-val">Unknown</span>':fmtMoney(effTax(d)))+'</td>'+
         '<td class="num">'+fmtMoney(total)+'</td>'+
         '<td class="num tier-end">'+fmtMoney(perBoard)+'</td>';
     });
@@ -520,6 +563,7 @@ function renderTbody(){
 
 function renderAll(){
   renderLegend();
+  renderColgroup();
   renderThead();
   renderTbody();
   renderTotalsRow();
@@ -557,33 +601,40 @@ function applyReesesRec(){
 
 function buildTierEditTable(tiersObj){
   let html='<colgroup>'+
+    '<col style="width:18%">'+
     '<col style="width:11%">'+
-    '<col style="width:16%">'+
-    '<col style="width:10%">'+
+    '<col style="width:9%">'+
     '<col style="width:19%">'+
     '<col style="width:19%">'+
-    '<col style="width:13%">'+
+    '<col style="width:12%">'+
     '<col style="width:12%">'+
     '</colgroup>'+
-    '<tr><th class="left">Boards</th><th>Cost</th><th>Qty</th><th>Shipping</th><th>Tax</th><th>Total</th><th>Per Board</th></tr>';
+    '<tr><th class="left">Tier</th><th>Cost</th><th>Qty</th><th>Shipping</th><th>Tax</th><th>Total</th><th>Per Unit</th></tr>';
   TIERS.forEach(t=>{
-    const d=(tiersObj && tiersObj[t]) || {cost:0,qty:0,shipping:0,tax:0,shippingUnknown:false,taxUnknown:false};
-    const cost=Number(d.cost)||0, qty=Number(d.qty)||0, shipping=Number(d.shipping)||0, tax=Number(d.tax)||0;
-    const shipUnk=!!d.shippingUnknown, taxUnk=!!d.taxUnknown;
+    const d=(tiersObj && tiersObj[t]) || {cost:0,qty:0,shipping:0,tax:0,shippingUnknown:false,taxUnknown:false,taxSevenPercent:false};
+    const cost=Number(d.cost)||0, qty=Number(d.qty)||0, shipping=Number(d.shipping)||0;
+    const shipUnk=!!d.shippingUnknown, taxUnk=!!d.taxUnknown, taxSeven=!!d.taxSevenPercent;
+    // A 7%-tax part shows the computed figure in the (disabled) field rather
+    // than whatever was last typed there, so the display always matches the
+    // rule that's actually in effect.
+    const tax=taxSeven ? Math.round((cost*qty*0.07+Number.EPSILON)*100)/100 : (Number(d.tax)||0);
     const total=cost*qty+(shipUnk?0:shipping)+(taxUnk?0:tax);
     html+='<tr class="tier-input-row">'+
-      '<td class="tlabel" rowspan="2">'+t+'</td>'+
-      '<td><input type="number" step="0.01" id="ft-'+t+'-cost" value="'+cost+'" oninput="recalcTier('+t+')"></td>'+
-      '<td><input type="number" step="1" id="ft-'+t+'-qty" value="'+qty+'" oninput="recalcTier('+t+')"></td>'+
-      '<td><input type="number" step="0.01" id="ft-'+t+'-shipping" value="'+shipping+'" oninput="recalcTier('+t+')" '+(shipUnk?"disabled":"")+'></td>'+
-      '<td><input type="number" step="0.01" id="ft-'+t+'-tax" value="'+tax+'" oninput="recalcTier('+t+')" '+(taxUnk?"disabled":"")+'></td>'+
+      '<td class="tlabel" rowspan="2">'+(TIER_LABEL[t]||t)+'</td>'+
+      '<td><input type="number" step="0.01" id="ft-'+t+'-cost" value="'+cost+'" oninput="recalcTier(\''+t+'\')"></td>'+
+      '<td><input type="number" step="1" id="ft-'+t+'-qty" value="'+qty+'" oninput="recalcTier(\''+t+'\')"></td>'+
+      '<td><input type="number" step="0.01" id="ft-'+t+'-shipping" value="'+shipping+'" oninput="recalcTier(\''+t+'\')" '+(shipUnk?"disabled":"")+'></td>'+
+      '<td><input type="number" step="0.01" id="ft-'+t+'-tax" value="'+tax+'" oninput="recalcTier(\''+t+'\')" '+((taxUnk||taxSeven)?"disabled":"")+'></td>'+
       '<td class="perboard-display" rowspan="2" id="ft-'+t+'-total-display">'+fmtMoney(total)+'</td>'+
       '<td class="perboard-display" rowspan="2" id="ft-'+t+'-perboard-display">'+fmtMoney(total/divisorFor(t))+'</td>'+
       '</tr>'+
       '<tr class="tier-unknown-row">'+
       '<td></td><td></td>'+
-      '<td><label class="unknown-toggle"><input type="checkbox" id="ft-'+t+'-shipping-unknown" '+(shipUnk?"checked":"")+' onchange="toggleUnknown('+t+',\'shipping\')"> Unknown</label></td>'+
-      '<td><label class="unknown-toggle"><input type="checkbox" id="ft-'+t+'-tax-unknown" '+(taxUnk?"checked":"")+' onchange="toggleUnknown('+t+',\'tax\')"> Unknown</label></td>'+
+      '<td><label class="unknown-toggle"><input type="checkbox" id="ft-'+t+'-shipping-unknown" '+(shipUnk?"checked":"")+' onchange="toggleUnknown(\''+t+'\',\'shipping\')"> Unknown</label></td>'+
+      '<td><div class="tax-toggles">'+
+        '<label class="unknown-toggle"><input type="checkbox" id="ft-'+t+'-tax-unknown" '+(taxUnk?"checked":"")+' onchange="toggleUnknown(\''+t+'\',\'tax\')"> Unknown</label>'+
+        '<label class="unknown-toggle"><input type="checkbox" id="ft-'+t+'-tax-sevenpercent" '+(taxSeven?"checked":"")+' onchange="toggleSevenPercent(\''+t+'\')"> 7%</label>'+
+      '</div></td>'+
       '</tr>';
   });
   return html;
@@ -591,10 +642,28 @@ function buildTierEditTable(tiersObj){
 
 // Toggling "Unknown" disables (but doesn't clear) the matching number field,
 // so a previously-typed estimate is preserved if it's switched back later.
+// For Tax, "Unknown" and "7%" are mutually exclusive — checking one clears
+// the other, since only one rule can govern the field at a time.
 function toggleUnknown(t, field){
   const checkbox=document.getElementById("ft-"+t+"-"+field+"-unknown");
   const input=document.getElementById("ft-"+t+"-"+field);
+  if(field==="tax" && checkbox.checked){
+    const sevenCb=document.getElementById("ft-"+t+"-tax-sevenpercent");
+    if(sevenCb) sevenCb.checked=false;
+  }
   input.disabled=checkbox.checked;
+  recalcTier(t);
+}
+
+// "7%" auto-calculates Tax as 7% of Cost × Qty and disables manual entry,
+// mirroring how "Unknown" behaves. Mutually exclusive with "Unknown".
+function toggleSevenPercent(t){
+  const sevenCb=document.getElementById("ft-"+t+"-tax-sevenpercent");
+  const unkCb=document.getElementById("ft-"+t+"-tax-unknown");
+  if(sevenCb.checked && unkCb.checked){
+    unkCb.checked=false;
+  }
+  document.getElementById("ft-"+t+"-tax").disabled = sevenCb.checked || unkCb.checked;
   recalcTier(t);
 }
 
@@ -603,8 +672,18 @@ function recalcTier(t){
   const qty=parseFloat(document.getElementById("ft-"+t+"-qty").value)||0;
   const shipUnk=document.getElementById("ft-"+t+"-shipping-unknown").checked;
   const taxUnk=document.getElementById("ft-"+t+"-tax-unknown").checked;
+  const taxSeven=document.getElementById("ft-"+t+"-tax-sevenpercent").checked;
   const shipping=shipUnk?0:(parseFloat(document.getElementById("ft-"+t+"-shipping").value)||0);
-  const tax=taxUnk?0:(parseFloat(document.getElementById("ft-"+t+"-tax").value)||0);
+  const taxInput=document.getElementById("ft-"+t+"-tax");
+  let tax;
+  if(taxUnk){
+    tax=0;
+  }else if(taxSeven){
+    tax=Math.round((cost*qty*0.07+Number.EPSILON)*100)/100;
+    taxInput.value=tax; // reflect the auto-calculated figure in the disabled field
+  }else{
+    tax=parseFloat(taxInput.value)||0;
+  }
   const total=cost*qty+shipping+tax;
   document.getElementById("ft-"+t+"-total-display").textContent=fmtMoney(total);
   document.getElementById("ft-"+t+"-perboard-display").textContent=fmtMoney(total/divisorFor(t));
@@ -660,8 +739,11 @@ function saveModal(e){
     const qty=parseFloat(document.getElementById("ft-"+t+"-qty").value)||0;
     const shippingUnknown=document.getElementById("ft-"+t+"-shipping-unknown").checked;
     const taxUnknown=document.getElementById("ft-"+t+"-tax-unknown").checked;
+    const taxSevenPercent=document.getElementById("ft-"+t+"-tax-sevenpercent").checked;
     const shipping=parseFloat(document.getElementById("ft-"+t+"-shipping").value)||0;
-    const tax=parseFloat(document.getElementById("ft-"+t+"-tax").value)||0;
+    // Recompute Tax from the rule in effect rather than trusting the (possibly
+    // stale) field value, so Save is always correct even if recalc hasn't run.
+    const tax=taxSevenPercent ? Math.round((cost*qty*0.07+Number.EPSILON)*100)/100 : (parseFloat(document.getElementById("ft-"+t+"-tax").value)||0);
     const total=cost*qty+(shippingUnknown?0:shipping)+(taxUnknown?0:tax);
     tiers[t]={
       cost: cost,
@@ -670,6 +752,7 @@ function saveModal(e){
       shippingUnknown: shippingUnknown,
       tax: tax,
       taxUnknown: taxUnknown,
+      taxSevenPercent: taxSevenPercent,
       total: total,
       perBoard: total/divisorFor(t)
     };
